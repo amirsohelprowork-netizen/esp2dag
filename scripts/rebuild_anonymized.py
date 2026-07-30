@@ -1,6 +1,6 @@
 """Rebuild public anonymized ESP inputs from local OLD extracts.
 
-CRITICAL: never rename ESP keywords (RELEASE, VARIANT, STARTING, ADD, …).
+CRITICAL: never rename ESP keywords (RELEASE, AFTER, VARIANT, STARTING, ADD, …).
 That bug previously turned RELEASE→SAP973 and flattened dependency graphs.
 
 Usage:
@@ -626,17 +626,27 @@ def force_deny_scrub(text: str) -> str:
 
 def assert_healthy(schedule: str, events: str) -> None:
     release = len(re.findall(r"(?i)\bRELEASE\b", schedule))
+    release_add = len(re.findall(r"(?i)\bRELEASE\s+ADD\b", schedule))
+    after = len(re.findall(r"(?i)\bAFTER\b", schedule))
+    after_add = len(re.findall(r"(?i)\bAFTER\s+ADD\b", schedule))
     variant = len(re.findall(r"(?i)\bVARIANT\b", schedule))
     starting = len(re.findall(r"(?i)\bSTARTING\b", events))
     sap973_add = len(re.findall(r"(?i)\bSAP973\s+ADD\b", schedule))
     bad_release = len(re.findall(r"(?i)\bSAP\d+\s+ADD\b", schedule))
 
-    print(f"ASSERT RELEASE={release} VARIANT={variant} STARTING={starting}")
+    print(
+        f"ASSERT RELEASE={release} RELEASE_ADD={release_add} "
+        f"AFTER={after} AFTER_ADD={after_add} VARIANT={variant} STARTING={starting}"
+    )
     print(f"ASSERT SAP973_ADD={sap973_add} SAP##_ADD={bad_release}")
 
     errors: list[str] = []
     if release < 1000:
         errors.append(f"RELEASE too low ({release})")
+    if release_add < 1000:
+        errors.append(f"RELEASE ADD too low ({release_add})")
+    if after_add < 10:
+        errors.append(f"AFTER ADD too low ({after_add})")
     if variant < 500:
         errors.append(f"VARIANT too low ({variant})")
     if starting < 1:

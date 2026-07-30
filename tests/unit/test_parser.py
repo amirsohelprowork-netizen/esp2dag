@@ -47,6 +47,23 @@ def test_parse_simple_appl_jobs_and_release() -> None:
     assert result.ast.jobs[0].dependencies[0].dependency_type == "RELEASE"
 
 
+def test_parse_after_add_dependency() -> None:
+    content = (
+        "APPL APP_A WAIT\n"
+        "JOB JOB1\n"
+        "  RUN DAILY\n"
+        "ENDJOB\n"
+        "JOB JOB2\n"
+        "  RUN DAILY\n"
+        "  AFTER ADD(JOB1)\n"
+        "ENDJOB\n"
+    )
+    result = _parse_text(content, name="APP_A")
+    dep = result.ast.jobs[1].dependencies[0]
+    assert dep.predecessor == "JOB1"
+    assert dep.dependency_type == "AFTER"
+
+
 def test_parse_job_types_and_command() -> None:
     content = (
         "APPL X\n"

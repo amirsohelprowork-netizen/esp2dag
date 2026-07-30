@@ -289,16 +289,16 @@ def parse_cmd(
         table.add_column("Name")
         table.add_column("Type")
         table.add_column("Run")
-        table.add_column("Releases")
+        table.add_column("Deps")
         for job in result.ast.jobs:
-            releases = ", ".join(
-                d.predecessor for d in job.dependencies if d.dependency_type == "RELEASE"
+            deps = ", ".join(
+                f"{d.dependency_type}:{d.predecessor}" for d in job.dependencies
             )
             table.add_row(
                 job.name,
                 job.job_type or "JOB",
                 job.schedule.expression if job.schedule else "",
-                releases,
+                deps,
             )
         console.print(table)
         for diagnostic in result.diagnostics:

@@ -91,6 +91,7 @@ _APP_SYNC = (
 _JOB_BODY_KEYWORDS = (
     TokenType.RUN,
     TokenType.RELEASE,
+    TokenType.AFTER,
     TokenType.RESOURCE,
     TokenType.COMMAND,
     TokenType.CMDNAME,
@@ -485,7 +486,11 @@ class EspParser:
             schedule = self._parse_run(stream)
             return command, schedule, retry, schedule.span.end_line
         if stream.check(TokenType.RELEASE):
-            dep = self._parse_release(stream)
+            dep = self._parse_dependency(stream, dependency_type="RELEASE")
+            dependencies.append(dep)
+            return command, schedule, retry, dep.span.end_line
+        if stream.check(TokenType.AFTER):
+            dep = self._parse_dependency(stream, dependency_type="AFTER")
             dependencies.append(dep)
             return command, schedule, retry, dep.span.end_line
         if stream.check(TokenType.RESOURCE):
@@ -587,15 +592,25 @@ class EspParser:
         end = stream.peek(-1) if parts else start
         return ScheduleNode(span=_span(start, end), expression=expression)
 
-    def _parse_release(self, stream: TokenStream) -> DependencyNode:
-        start = stream.advance()  # RELEASE
+    def _parse_dependency(
+        self,
+        stream: TokenStream,
+        *,
+        dependency_type: str,
+    ) -> DependencyNode:
+        """Parse ``RELEASE ADD(job)`` or ``AFTER ADD(job)`` (ADD optional)."""
+        start = stream.advance()  # RELEASE | AFTER
         stream.match(TokenType.ADD)
         target = self._parse_paren_or_name(stream)
         return DependencyNode(
             span=_span(start),
             predecessor=target,
-            dependency_type="RELEASE",
+            dependency_type=dependency_type,
         )
+
+    def _parse_release(self, stream: TokenStream) -> DependencyNode:
+        """Backward-compatible alias for RELEASE ADD(...)."""
+        return self._parse_dependency(stream, dependency_type="RELEASE")
 
     def _parse_resource_ref(self, stream: TokenStream) -> ResourceRefNode:
         start = stream.advance()  # RESOURCE
@@ -757,7 +772,7 @@ class EspParser:
             return "".join(parts)
         if stream.check(TokenType.IDENTIFIER, TokenType.STRING):
             return stream.advance().value
-        raise ParseError("Expected job name or (name) after RELEASE", stream.current)
+        raise ParseError("Expected job name or (name) after RELEASE/AFTER", stream.current)
 
     def _collect_until_boundary(self, stream: TokenStream) -> list[str]:
         """Collect token values until the next statement boundary."""

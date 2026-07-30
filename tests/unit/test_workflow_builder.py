@@ -62,6 +62,24 @@ def test_build_release_edges_and_bash_task() -> None:
     assert wf.schedule.cron == "0 0 * * *"
 
 
+def test_build_after_add_edges() -> None:
+    """AFTER ADD(pred) means pred → this job (opposite of RELEASE direction)."""
+    content = (
+        "APPL APP_A WAIT\n"
+        "JOB JOB1\n"
+        "  RUN DAILY\n"
+        "ENDJOB\n"
+        "JOB JOB2\n"
+        "  RUN DAILY\n"
+        "  AFTER ADD(JOB1)\n"
+        "ENDJOB\n"
+    )
+    wf = _build(content, name="APP_A")
+    assert len(wf.dependencies) == 1
+    assert wf.dependencies[0].upstream_task_id == "JOB1"
+    assert wf.dependencies[0].downstream_task_id == "JOB2"
+
+
 def test_external_job_becomes_sensor() -> None:
     content = (
         "APPL X\n"
