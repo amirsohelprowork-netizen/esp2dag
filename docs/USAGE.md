@@ -97,4 +97,4 @@ poetry run pytest -m "not slow"
 ## License / commercial use
 
 Public evaluation is welcome. **Commercial / production use requires permission.**  
-See [LICENSE](../LICENSE) and contact **amirsohelprowrok@gmail.com**.
+See [LICENSE](../LICENSE) and contact **amirsohelprowork@gmail.com**.

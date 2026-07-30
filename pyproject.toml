@@ -2,7 +2,7 @@
 name = "esp2dag"
 version = "0.1.0"
 description = "CA ESP / Broadcom ESP Workload Automation → Apache Airflow DAG Factory YAML compiler (scheduler migration)"
-authors = ["Amir Sohel <amirsohelprowrok@gmail.com>"]
+authors = ["Amir Sohel <amirsohelprowork@gmail.com>"]
 readme = "README.md"
 license = "LicenseRef-Source-Available-NonCommercial"
 homepage = "https://github.com/amirsohelprowork-netizen/ESP_schedules_to_dagfactory"

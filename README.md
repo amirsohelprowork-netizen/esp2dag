@@ -131,7 +131,7 @@ This project is **public for learning and evaluation**.
 | Consulting on ESP / Airflow migration strategy | Email below |
 
 **Amir Sohel**  
-Email: [amirsohelprowrok@gmail.com](mailto:amirsohelprowrok@gmail.com)  
+Email: [amirsohelprowork@gmail.com](mailto:amirsohelprowork@gmail.com)  
 GitHub: [amirsohelprowork-netizen](https://github.com/amirsohelprowork-netizen)
 
 Please include: your organization, source scheduler, target platform, and rough estate size (# apps / jobs).
