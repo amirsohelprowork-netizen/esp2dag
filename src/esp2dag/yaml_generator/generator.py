@@ -16,6 +16,7 @@ from typing import Any
 import yaml
 
 from esp2dag.models.workflow import Task, Workflow
+from esp2dag.compiler.workflow.notwith import assign_notwith_pools
 from esp2dag.yaml_generator.operators import build_task_fields, infer_owner
 from esp2dag.yaml_generator.schedule_cron import esp_schedule_to_cron
 
@@ -43,6 +44,9 @@ class DagFactoryYamlGenerator:
             workflow.id,
             self._profile,
         )
+        # Local assign when pools were not already applied by the batch pipeline.
+        if not any(t.params.get("notwith_pool") for t in workflow.tasks):
+            workflow = assign_notwith_pools([workflow])[0]
         if self._profile in {"astronomer", "list"}:
             document = self._build_list_document(workflow)
         else:

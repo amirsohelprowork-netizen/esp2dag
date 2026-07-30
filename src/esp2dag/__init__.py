@@ -1,4 +1,4 @@
-"""ESP to Airflow DAG Factory Builder — compiler package."""
+"""ESP Workload Automation → DAG Factory YAML compiler (`esp2dag`)."""
 
 from importlib.metadata import PackageNotFoundError, version
 

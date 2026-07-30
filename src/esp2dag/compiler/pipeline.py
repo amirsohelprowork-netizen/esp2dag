@@ -15,6 +15,7 @@ from esp2dag.models.config import (
 from esp2dag.models.diagnostics import Diagnostic, FailedUnit, Severity
 from esp2dag.models.source import SourceFile
 from esp2dag.models.workflow import Workflow
+from esp2dag.compiler.workflow.notwith import assign_notwith_pools
 
 if TYPE_CHECKING:
     from esp2dag.compiler.context import (
@@ -142,6 +143,9 @@ class CompilerPipeline:
             workflows = self._event_merger.merge(workflows, catalog)
             for wf in workflows:
                 diagnostics.extend(wf.diagnostics)
+
+        # Global NOTWITH exclusion groups → shared Airflow pools (cross-DAG safe).
+        workflows = assign_notwith_pools(workflows)
 
         if self._workflow_validator is not None:
             for wf in workflows:

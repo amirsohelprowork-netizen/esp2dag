@@ -143,7 +143,14 @@ class EspWorkflowBuilder:
             }:
                 continue
             if meta.key == "notwith" and meta.value:
-                params.setdefault("notwith", meta.value)
+                peers = [
+                    p.strip()
+                    for p in params.get("notwith_peers", "").split(",")
+                    if p.strip()
+                ]
+                if meta.value.strip() not in peers:
+                    peers.append(meta.value.strip())
+                params["notwith_peers"] = ",".join(peers)
                 continue
             if meta.value and meta.key not in params:
                 params[meta.key] = meta.value

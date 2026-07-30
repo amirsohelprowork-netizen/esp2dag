@@ -1,0 +1,52 @@
+# Source Available — Non-Commercial License
+
+Copyright (c) 2026 Amir Sohel. All rights reserved.
+
+## Summary
+
+This repository is **publicly visible** so others can learn from the approach and evaluate the tool.
+
+It is **not free for commercial use**.
+
+| Use | Allowed? |
+|-----|----------|
+| View / clone / study the code | Yes |
+| Run locally for personal learning or evaluation | Yes |
+| Modify for personal / internal evaluation | Yes |
+| Publish reviews or write-ups (with attribution) | Yes |
+| Commercial use (paid services, products, client work, SaaS, resale, redistribution as a product) | **No — contact required** |
+| Use in a company production migration without a license | **No — contact required** |
+
+## Grant of rights (non-commercial)
+
+Subject to the terms below, you may use, copy, and modify this software **solely for non-commercial purposes**, including personal learning, research, and internal proof-of-concept evaluation that does not deliver production value to a customer or employer’s live operations.
+
+## Commercial use
+
+**Commercial use requires prior written permission.**
+
+Commercial use includes (without limitation):
+
+- Using this software (or derivatives) in a **paid engagement** or consulting project
+- Using it for a **production** scheduler → Airflow / DAG Factory migration at an organization
+- Offering it as a **service**, SaaS, or product feature
+- Redistributing it as part of a commercial offering
+
+To request a commercial license or discuss custom converters for other schedulers, contact:
+
+**Amir Sohel** — [amirsohelprowrok@gmail.com](mailto:amirsohelprowrok@gmail.com)
+
+## Attribution
+
+If you reference this project publicly, please credit:
+
+> ESP Schedules to DAG Factory (`esp2dag`) by Amir Sohel  
+> https://github.com/amirsohelprowork-netizen/ESP_schedules_to_dagfactory
+
+## No warranty
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM USE OF THE SOFTWARE.
+
+## Termination
+
+Any use outside these terms terminates the permissions granted here. Upon termination you must stop using the software for the unauthorized purpose and destroy copies used commercially without a license.

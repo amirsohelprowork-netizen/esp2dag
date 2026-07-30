@@ -126,12 +126,16 @@ def build_task_fields(task: Task, *, yaml_task_id: str) -> dict[str, Any]:
     if operator == EMPTY_OPERATOR:
         return fields
 
+    notwith_pool = task.params.get("notwith_pool")
+
     if operator == AS400_OPERATOR:
         fields["conn_id"] = f"{agent}_AS400" if agent else "as400_default"
         fields["command"] = task.command or ""
         if jobq:
             fields["job_queue"] = jobq
-        if task.pool:
+        if notwith_pool:
+            fields["pool"] = notwith_pool
+        elif task.pool:
             fields["pool"] = task.pool
         elif agent:
             fields["pool"] = agent
@@ -140,8 +144,8 @@ def build_task_fields(task: Task, *, yaml_task_id: str) -> dict[str, Any]:
     if operator == WINRM_OPERATOR:
         fields["winrm_conn_id"] = agent or "winrm_default"
         fields["command"] = task.command or ""
-        if task.params.get("notwith"):
-            fields["pool"] = _mutex_pool(yaml_task_id)
+        if notwith_pool:
+            fields["pool"] = notwith_pool
         elif task.pool:
             fields["pool"] = task.pool
         return fields
@@ -149,6 +153,8 @@ def build_task_fields(task: Task, *, yaml_task_id: str) -> dict[str, Any]:
     if operator == SSH_OPERATOR:
         fields["ssh_conn_id"] = agent or "ssh_default"
         fields["command"] = _ssh_command(task.command, args)
+        if notwith_pool:
+            fields["pool"] = notwith_pool
         return fields
 
     if operator == SAP_OPERATOR:
@@ -163,12 +169,16 @@ def build_task_fields(task: Task, *, yaml_task_id: str) -> dict[str, Any]:
             fields["sap_job_class"] = _strip_quotes(task.params["sapjobclass"])
         if task.params.get("stepuser"):
             fields["step_user"] = _strip_quotes(task.params["stepuser"])
+        if notwith_pool:
+            fields["pool"] = notwith_pool
         return fields
 
     if operator == MAINFRAME_OPERATOR:
         fields["job_name"] = task.name
         if task.params.get("ccchk"):
             fields["ccchk"] = task.params["ccchk"]
+        if notwith_pool:
+            fields["pool"] = notwith_pool
         return fields
 
     if operator == PYTHON_OPERATOR:
@@ -178,10 +188,14 @@ def build_task_fields(task: Task, *, yaml_task_id: str) -> dict[str, Any]:
         else:
             fields["python_callable"] = "esp_migration.data_object.execute"
         fields["op_kwargs"] = {"esp_job": task.name, "esp_type": esp_type or "DATA_OBJECT"}
+        if notwith_pool:
+            fields["pool"] = notwith_pool
         return fields
 
     if operator == BASH_OPERATOR:
         fields["bash_command"] = _ssh_command(task.command, args)
+        if notwith_pool:
+            fields["pool"] = notwith_pool
         return fields
 
     return fields
@@ -217,12 +231,6 @@ def _ssh_command(command: str | None, args: str | None) -> str:
     if args and args.strip():
         return f"{base} {args.strip()}".strip()
     return base
-
-
-def _mutex_pool(yaml_task_id: str) -> str:
-    """bosssap_81_loadbat → bosssap_mutex."""
-    head = yaml_task_id.split("_")[0]
-    return f"{head}_mutex"
 
 
 def _strip_quotes(value: str) -> str:
