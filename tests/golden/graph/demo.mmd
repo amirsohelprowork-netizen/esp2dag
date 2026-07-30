@@ -1,0 +1,7 @@
+%% workflow: demo
+flowchart TD
+  EXTRACT["EXTRACT<br/>NT_JOB"]
+  LOAD["LOAD<br/>JOB"]
+  EXTRACT --> LOAD
+  %% EXTRACT -> WinRMOperator
+  %% LOAD -> MainframeSubmitJobOperator

@@ -1,0 +1,41 @@
+{
+  "job_count": 2,
+  "jobs": [
+    {
+      "agents": [],
+      "command": null,
+      "job_type": null,
+      "name": "LIE.UPSTREAM",
+      "releases": [
+        "LIS.!ESPAPPL"
+      ],
+      "resources": [],
+      "run": "DAILY",
+      "unsupported": []
+    },
+    {
+      "agents": [
+        "AGENT02"
+      ],
+      "command": "D:\\SCRIPTS\\WINSTEP.bat",
+      "job_type": "NT_JOB",
+      "name": "WINSTEP",
+      "releases": [
+        "NEXTSTEP"
+      ],
+      "resources": [],
+      "run": "DAILY",
+      "unsupported": []
+    }
+  ],
+  "metadata_keys": [
+    "appl_option",
+    "invoke",
+    "tag"
+  ],
+  "name": "SAMPLEAPP",
+  "notifications": 1,
+  "resources": 0,
+  "unsupported": [],
+  "variables": 0
+}

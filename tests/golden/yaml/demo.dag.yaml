@@ -1,0 +1,20 @@
+demo:
+  description: DEMO application
+  schedule: '@daily'
+  catchup: false
+  default_args:
+    owner: batchuser
+    start_date: '2024-01-01'
+  tasks:
+    extract:
+      operator: custom_operators.as400.AS400Operator
+      conn_id: RES01_AS400
+      command: CYBROBOT EXTRACT
+      job_queue: Q.ESP
+      pool: RES01
+    load:
+      operator: airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator
+      winrm_conn_id: WIN01
+      command: D:\RUN\load.bat
+      dependencies:
+      - extract

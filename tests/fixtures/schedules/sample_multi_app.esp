@@ -1,0 +1,11 @@
+/* prologue control statements */
+NORUN JAN 01 2024
+
+APPL APP_A WAIT
+   JOB JOB1
+   JOB JOB2
+ENDJOB
+
+APPL APP_B
+   JOB JOB_X
+ENDJOB

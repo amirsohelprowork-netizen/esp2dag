@@ -1,0 +1,24 @@
+{
+  "binding_count": 4,
+  "event_count": 3,
+  "events": [
+    {
+      "has_schedule": true,
+      "invoke_application": "SAMPLEAPP",
+      "kind": "time",
+      "name": "EV001.SAMPLEAPP"
+    },
+    {
+      "has_schedule": true,
+      "invoke_application": "SAPDEMO",
+      "kind": "time",
+      "name": "EV002.SAPDEMO"
+    },
+    {
+      "has_schedule": false,
+      "invoke_application": "FILEDEMO",
+      "kind": "file",
+      "name": "EV003.FILEDEMO"
+    }
+  ]
+}

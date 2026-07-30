@@ -1,0 +1,9 @@
+/* APPL FAKEAPP should be ignored inside comments */
+APPL REAL1 WAIT
+  JOB J1
+  /* APPL INSIDE_COMMENT */
+  ENDJOB
+APPL REAL2
+  JOB J2
+  COMPLETE APPL(OTHER.0)
+  ENDJOB

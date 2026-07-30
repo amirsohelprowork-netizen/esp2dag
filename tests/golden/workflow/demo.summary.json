@@ -1,0 +1,43 @@
+{
+  "dependencies": [
+    {
+      "downstream": "LOAD",
+      "kind": "success",
+      "upstream": "EXTRACT"
+    }
+  ],
+  "dependency_count": 1,
+  "event_count": 0,
+  "id": "demo",
+  "name": "DEMO",
+  "notification_count": 0,
+  "schedule": {
+    "cron": "0 0 * * *",
+    "raw": "DAILY",
+    "status": "mapped"
+  },
+  "tags": [
+    "DEMO"
+  ],
+  "task_count": 2,
+  "tasks": [
+    {
+      "command": "D:\\RUN\\extract.bat",
+      "name": "EXTRACT",
+      "pool": null,
+      "source_line": 3,
+      "task_id": "EXTRACT",
+      "task_type": "bash",
+      "unsupported_features": []
+    },
+    {
+      "command": null,
+      "name": "LOAD",
+      "pool": null,
+      "source_line": 8,
+      "task_id": "LOAD",
+      "task_type": "bash",
+      "unsupported_features": []
+    }
+  ]
+}

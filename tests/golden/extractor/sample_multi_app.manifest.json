@@ -1,0 +1,19 @@
+{
+  "diagnostic_codes": [
+    "W101"
+  ],
+  "names": [
+    "APP_A",
+    "APP_B"
+  ],
+  "spans": [
+    [
+      4,
+      8
+    ],
+    [
+      9,
+      11
+    ]
+  ]
+}
