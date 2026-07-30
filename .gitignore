@@ -30,6 +30,7 @@ out/
 # Private / raw org data — NEVER publish
 private/
 data/raw/
+data/not_atonymized/
 *.map.json
 
 # OS
