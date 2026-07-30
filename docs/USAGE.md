@@ -81,6 +81,15 @@ out/<run>/
   reports/             # statistics, validation, migration, dependencies
 ```
 
+## Dependencies → graph / YAML edges
+
+| ESP statement | Airflow edge |
+|---------------|--------------|
+| `RELEASE ADD(B)` inside job `A` | `A → B` |
+| `AFTER ADD(A)` inside job `B` | `A → B` |
+
+Graphs (`*.mmd`) and YAML `dependencies:` are built from both forms.
+
 ## Airflow notes
 
 1. Load YAML with [DAG Factory](https://github.com/astronomer/dag-factory) (or your org’s loader).
@@ -92,6 +101,14 @@ out/<run>/
 
 ```bash
 poetry run pytest -m "not slow"
+```
+
+## Maintainer: rebuild anonymized inputs
+
+Private raw extracts stay in `data/not_atonymized/` (gitignored). To regenerate public samples **without renaming ESP keywords** (`RELEASE`, `AFTER`, `VARIANT`, …):
+
+```bash
+python scripts/rebuild_anonymized.py
 ```
 
 ## License / commercial use

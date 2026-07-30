@@ -25,6 +25,7 @@ ESP schedule + events
 
 - **DAG Factory YAML** ready for Airflow (operators, dependencies, schedules)
 - Job-type mapping: WinRM, SSH, AS400, SAP RFC, mainframe submit, sensors, EmptyOperator
+- Dependencies from ESP **`RELEASE ADD`** and **`AFTER ADD`**
 - **EXTERNAL** → `ExternalTaskSensor` · **LINK** → `EmptyOperator`
 - **NOTWITH** → shared Airflow **exclusion pools** (cross-DAG safe)
 - Event merge for cron-like schedules from ESP `SCHEDULE` times
@@ -100,6 +101,7 @@ my_app:
 src/esp2dag/          # Compiler package (CLI + pipeline)
 data/anonymized/      # Redacted full schedule + events (demo input)
 data/samples/         # Tiny fixtures
+scripts/              # Maintainer helpers (keyword-safe re-anonymize)
 docs/                 # Architecture + usage
 tests/                # Unit + golden tests
 LICENSE               # Source-available, non-commercial without permission
