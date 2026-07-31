@@ -245,17 +245,30 @@ def _merge_schedule(
         raw = event.attributes.get("schedule")
         if raw:
             expressions.append(raw)
-    joined = " | ".join(expressions) if expressions else (current.raw_expression if current else "")
-    cron = esp_schedule_to_cron(joined)
-    if cron is None and current is not None:
-        cron = current.cron
-    status = MappingStatus.MAPPED if cron else MappingStatus.PARTIAL
+
+    if expressions:
+        # Event SCHEDULE is authoritative for when the application runs.
+        # Never fall back to a job-level RUN DAILY midnight cron — that
+        # silently replaces e.g. ``02.15 MON`` with ``0 0 * * *``.
+        joined = " | ".join(expressions)
+        cron = esp_schedule_to_cron(joined)
+        status = MappingStatus.MAPPED if cron else MappingStatus.PARTIAL
+        return ScheduleSpec(
+            raw_expression=joined,
+            cron=cron,
+            calendar_ref=events[0].attributes.get("calendar"),
+            catchup=False,
+            mapping_status=status,
+        )
+
+    if current is not None:
+        return current
     return ScheduleSpec(
-        raw_expression=joined or (current.raw_expression if current else "UNKNOWN"),
-        cron=cron,
-        calendar_ref=events[0].attributes.get("calendar"),
+        raw_expression="UNKNOWN",
+        cron=None,
+        calendar_ref=events[0].attributes.get("calendar") if events else None,
         catchup=False,
-        mapping_status=status,
+        mapping_status=MappingStatus.PARTIAL,
     )
 
 

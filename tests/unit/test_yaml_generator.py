@@ -42,6 +42,41 @@ def test_esp_schedule_to_cron_never_changes_mixed_time_pairs() -> None:
     assert esp_schedule_to_cron(raw) is None
 
 
+def test_esp_schedule_to_cron_weekday_time() -> None:
+    assert esp_schedule_to_cron("02.15 MON STARTING MON 20TH MAR 2023") == "15 2 * * 1"
+    assert esp_schedule_to_cron("08.00 WEEKDAYS") == "0 8 * * 1-5"
+
+
+def test_event_schedule_overrides_run_daily_midnight() -> None:
+    """Event ``02.15 MON`` must not keep a job-level RUN DAILY ``0 0 * * *``."""
+    content = (
+        "APPL APP0246 WAIT\n"
+        "JOB A LINK PROCESS\n"
+        "  RUN DAILY\n"
+        "  RELEASE ADD(B)\n"
+        "ENDJOB\n"
+        "LINUX_JOB B\n"
+        "  AGENT AGENT01\n"
+        "  SCRIPTNAME /tmp/x.sh\n"
+        "  RUN DAILY\n"
+        "ENDJOB\n"
+    )
+    events = (
+        "EVENT ID(E1) USER(U) OWNER(U) SYSTEM(S) REPLACE\n"
+        "CALENDAR SYSTEM\n"
+        "SCHEDULE 02.15 MON STARTING MON 20TH MAR 2023\n"
+        "INVOKE 'SYS.ESP.PROCLIB(APP0246)'\n"
+        "ENDDEF\n"
+    )
+    wf = _workflow(content, name="APP0246")
+    catalog = EspEventParser().parse(
+        SourceFile(path="events.esp", content=events)
+    )
+    merged = EspEventMerger().merge([wf], catalog)[0]
+    doc = yaml.safe_load(DagFactoryYamlGenerator().generate(merged))
+    assert doc["app0246"]["schedule"] == "15 2 * * 1"
+
+
 def test_yaml_omits_partial_schedule_instead_of_emitting_esp_text() -> None:
     wf = _workflow("APPL X\nJOB A\n  RUN !SITE_CALENDAR\nENDJOB\n", name="X")
     doc = yaml.safe_load(DagFactoryYamlGenerator().generate(wf))
