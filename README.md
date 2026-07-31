@@ -4,7 +4,7 @@
 
 Migrate legacy **ESP** (CA Workload Automation ESP Edition) applications and events into **DAG Factory**-compatible YAML for **Apache Airflow 2/3**.
 
-> Looking for ESP → Airflow, Cybermation → DAG Factory, mainframe scheduler modernization, AS400 / WinRM / SAP job mapping, or a similar converter for **Control-M, Automic, Tidal, Dollar Universe, Stonebranch, Automic**, etc.? See [Contact](#contact--commercial-licensing) below.
+> Looking for ESP → Airflow, Cybermation → DAG Factory, mainframe scheduler modernization, or a similar converter for **Control-M, IBM TWS, Tidal, etc.? See [Contact](#contact--commercial-licensing) below.
 
 ---
 
