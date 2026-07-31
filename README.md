@@ -88,7 +88,7 @@ my_app:
       mode: reschedule
     run_windows:
       operator: airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator
-      winrm_conn_id: AGENT01
+      ssh_conn_id: AGENT01
       command: D:\SCRIPTS\JOB.bat
       pool: nw_0001
       dependencies:

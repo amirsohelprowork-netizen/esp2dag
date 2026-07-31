@@ -37,6 +37,23 @@ def test_esp_schedule_to_cron_dual_daily() -> None:
     assert esp_schedule_to_cron(raw) == "0 11,19 * * *"
 
 
+def test_esp_schedule_to_cron_never_changes_mixed_time_pairs() -> None:
+    raw = "08.03 DAILY | 09.12 DAILY"
+    assert esp_schedule_to_cron(raw) is None
+
+
+def test_yaml_omits_partial_schedule_instead_of_emitting_esp_text() -> None:
+    wf = _workflow("APPL X\nJOB A\n  RUN !SITE_CALENDAR\nENDJOB\n", name="X")
+    doc = yaml.safe_load(DagFactoryYamlGenerator().generate(wf))
+    assert "schedule" not in doc["x"]
+
+
+def test_yaml_emits_retry_count() -> None:
+    wf = _workflow("APPL X\nNT_JOB A\n  CMDNAME D:\\a.bat\n  RETRY 3\nENDJOB\n", name="X")
+    task = yaml.safe_load(DagFactoryYamlGenerator().generate(wf))["x"]["tasks"]["a"]
+    assert task["retries"] == 3
+
+
 def test_yaml_uses_winrm_as400_ssh_and_dependencies() -> None:
     content = (
         "APPL DEMO WAIT\n"
@@ -75,14 +92,14 @@ def test_yaml_uses_winrm_as400_ssh_and_dependencies() -> None:
     tasks = doc["demo"]["tasks"]
     assert tasks["lie_a"]["operator"].endswith("ExternalTaskSensor")
     assert tasks["lie_a"]["external_dag_id"] == "other"
-    assert tasks["lie_a"]["external_task_id"] == "LIE.A"
+    assert tasks["lie_a"]["external_task_id"] == "lie_a"
     assert tasks["lis_espappl"]["operator"].endswith("EmptyOperator")
     assert tasks["lis_espappl"]["dependencies"] == ["lie_a"]
     assert tasks["as400step"]["operator"] == "custom_operators.as400.AS400Operator"
     assert tasks["as400step"]["conn_id"] == "RES01_AS400"
     assert tasks["as400step"]["command"] == "CYBROBOT AS400STEP"
     assert tasks["mtic"]["operator"].endswith("WinRMOperator")
-    assert tasks["mtic"]["winrm_conn_id"] == "AGENT02"
+    assert tasks["mtic"]["ssh_conn_id"] == "AGENT02"
     assert tasks["sleep"]["operator"].endswith("SSHOperator")
     assert tasks["sleep"]["command"] == "/bin/sleep 3"
     assert doc["demo"]["default_args"]["owner"] == "batchuser"

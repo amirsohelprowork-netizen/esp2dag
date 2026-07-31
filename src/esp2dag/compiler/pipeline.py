@@ -132,7 +132,7 @@ class CompilerPipeline:
                 )
 
         if request.events_path is not None and self._event_parser and self._event_merger:
-            catalog = self._event_parser.parse(
+            event_result = self._event_parser.parse_with_diagnostics(
                 SourceFile(
                     path=request.events_path.resolve(),
                     content=request.events_path.read_text(
@@ -140,9 +140,14 @@ class CompilerPipeline:
                     ),
                 )
             )
-            workflows = self._event_merger.merge(workflows, catalog)
-            for wf in workflows:
-                diagnostics.extend(wf.diagnostics)
+            diagnostics.extend(event_result.diagnostics)
+            merge_result = self._event_merger.merge_with_diagnostics(
+                workflows, event_result.catalog
+            )
+            workflows = merge_result.workflows
+            # Workflow diagnostics already contain the original per-app
+            # diagnostics. Add only the new merger diagnostics once.
+            diagnostics.extend(merge_result.diagnostics)
 
         # Global NOTWITH exclusion groups → shared Airflow pools (cross-DAG safe).
         workflows = assign_notwith_pools(workflows)

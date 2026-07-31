@@ -14,7 +14,7 @@ demo:
       pool: RES01
     load:
       operator: airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator
-      winrm_conn_id: WIN01
+      ssh_conn_id: WIN01
       command: D:\RUN\load.bat
       dependencies:
       - extract

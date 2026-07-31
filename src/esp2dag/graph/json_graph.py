@@ -11,6 +11,7 @@ from esp2dag.yaml_generator.operators import resolve_operator
 
 def render_json_graph(workflow: Workflow) -> str:
     """Render a JSON node/edge graph for one workflow."""
+    known_ids = {task.task_id for task in workflow.tasks}
     nodes: list[dict[str, Any]] = []
     for task in workflow.tasks:
         nodes.append(
@@ -20,16 +21,41 @@ def render_json_graph(workflow: Workflow) -> str:
                 "esp_job_type": task.params.get("esp_job_type"),
                 "task_type": task.task_type.value,
                 "operator": resolve_operator(task),
+                "unresolved": False,
             }
         )
-    edges = [
+    unresolved_ids = sorted(
         {
-            "from": dep.upstream_task_id,
-            "to": dep.downstream_task_id,
-            "kind": dep.kind.value,
+            endpoint
+            for dep in workflow.dependencies
+            for endpoint in (dep.upstream_task_id, dep.downstream_task_id)
+            if endpoint not in known_ids
         }
-        for dep in workflow.dependencies
-    ]
+    )
+    nodes.extend(
+        {
+            "id": task_id,
+            "name": task_id,
+            "esp_job_type": None,
+            "task_type": "unresolved",
+            "operator": None,
+            "unresolved": True,
+        }
+        for task_id in unresolved_ids
+    )
+    edges = []
+    for dep in workflow.dependencies:
+        edges.append(
+            {
+                "from": dep.upstream_task_id,
+                "to": dep.downstream_task_id,
+                "kind": dep.kind.value,
+                "condition": dep.condition,
+                "resolved": (
+                    dep.upstream_task_id in known_ids and dep.downstream_task_id in known_ids
+                ),
+            }
+        )
     payload = {
         "workflow_id": workflow.id,
         "name": workflow.name,

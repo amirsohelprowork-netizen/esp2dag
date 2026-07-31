@@ -11,6 +11,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from esp2dag.compiler.ast.nodes import ApplicationNode
 from esp2dag.compiler.lexer.token import Token
+from esp2dag.event_parser.merger import EventMergeResult
+from esp2dag.event_parser.parser import EventParseResult
 from esp2dag.models.config import ArtifactRef, CompileRequest, CompileResult, GraphFormat
 from esp2dag.models.diagnostics import Diagnostic
 from esp2dag.models.events import EventCatalog
@@ -90,6 +92,8 @@ class EventParser(Protocol):
 
     def parse(self, source: SourceFile) -> EventCatalog: ...
 
+    def parse_with_diagnostics(self, source: SourceFile) -> EventParseResult: ...
+
 
 @runtime_checkable
 class EventMerger(Protocol):
@@ -100,6 +104,12 @@ class EventMerger(Protocol):
         workflows: list[Workflow],
         catalog: EventCatalog,
     ) -> list[Workflow]: ...
+
+    def merge_with_diagnostics(
+        self,
+        workflows: list[Workflow],
+        catalog: EventCatalog,
+    ) -> EventMergeResult: ...
 
 
 @runtime_checkable

@@ -11,6 +11,7 @@ from esp2dag.compiler.workflow import EspWorkflowBuilder
 from esp2dag.graph import WorkflowGraphGenerator
 from esp2dag.models.config import GraphFormat
 from esp2dag.models.source import SourceApplication
+from esp2dag.models.workflow import Dependency
 
 
 def _workflow(content: str, *, name: str = "DEMO"):
@@ -66,3 +67,26 @@ def test_graphviz_dot() -> None:
     assert 'digraph "demo"' in text
     assert "EXTRACT" in text
     assert "->" in text
+
+
+def test_graphs_surface_dangling_dependencies() -> None:
+    wf = _workflow(CONTENT)
+    wf = wf.model_copy(
+        update={
+            "dependencies": [
+                Dependency(
+                    upstream_task_id="MISSING",
+                    downstream_task_id="LOAD",
+                    condition="COMPLETE",
+                )
+            ]
+        }
+    )
+    graph = WorkflowGraphGenerator()
+    mermaid = graph.generate(wf, GraphFormat.MERMAID)
+    assert "UNRESOLVED" in mermaid
+    assert "COMPLETE" in mermaid
+    payload = json.loads(graph.generate(wf, GraphFormat.JSON))
+    assert any(node["id"] == "MISSING" and node["unresolved"] for node in payload["nodes"])
+    assert payload["edges"][0]["resolved"] is False
+    assert payload["edges"][0]["condition"] == "COMPLETE"

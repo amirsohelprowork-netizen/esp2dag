@@ -27,6 +27,7 @@ from __future__ import annotations
 from typing import Any
 
 from esp2dag.models.workflow import Task, TaskType
+from esp2dag.utils import sanitize_task_id
 
 AS400_OPERATOR = "custom_operators.as400.AS400Operator"
 WINRM_OPERATOR = "airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator"
@@ -34,11 +35,11 @@ SSH_OPERATOR = "airflow.providers.ssh.operators.ssh.SSHOperator"
 SAP_OPERATOR = "airflow.providers.sap.operators.sap_rfc.SapRfcOperator"
 MAINFRAME_OPERATOR = "custom_operators.mainframe.MainframeSubmitJobOperator"
 MAINFRAME_DATASET_SENSOR = "custom_operators.mainframe.MainframeDatasetSensor"
-EXTERNAL_SENSOR = "airflow.sensors.external_task.ExternalTaskSensor"
-FILE_SENSOR = "airflow.sensors.filesystem.FileSensor"
-EMPTY_OPERATOR = "airflow.operators.empty.EmptyOperator"
-PYTHON_OPERATOR = "airflow.operators.python.PythonOperator"
-BASH_OPERATOR = "airflow.operators.bash.BashOperator"
+EXTERNAL_SENSOR = "airflow.providers.standard.sensors.external_task.ExternalTaskSensor"
+FILE_SENSOR = "airflow.providers.standard.sensors.filesystem.FileSensor"
+EMPTY_OPERATOR = "airflow.providers.standard.operators.empty.EmptyOperator"
+PYTHON_OPERATOR = "airflow.providers.standard.operators.python.PythonOperator"
+BASH_OPERATOR = "airflow.providers.standard.operators.bash.BashOperator"
 
 _SSH_JOB_TYPES = frozenset({"AIX_JOB", "UNIX_JOB", "LINUX_JOB"})
 _EMPTY_JOB_TYPES = frozenset({"APPLEND", "LINK_JOB"})
@@ -81,7 +82,13 @@ def resolve_operator(task: Task) -> str:
     return EMPTY_OPERATOR
 
 
-def build_task_fields(task: Task, *, yaml_task_id: str) -> dict[str, Any]:
+def build_task_fields(
+    task: Task,
+    *,
+    yaml_task_id: str,
+    retries: int | None = None,
+    review_notes: list[str] | None = None,
+) -> dict[str, Any]:
     """Build operator-specific YAML fields (excluding dependencies)."""
     operator = resolve_operator(task)
     fields: dict[str, Any] = {"operator": operator}
@@ -95,10 +102,15 @@ def build_task_fields(task: Task, *, yaml_task_id: str) -> dict[str, Any]:
             or task.params.get("external_dag_id")
             or "unknown"
         )
-        fields["external_dag_id"] = appl.lower()
-        fields["external_task_id"] = task.name
+        fields["external_dag_id"] = sanitize_task_id(appl).lower()
+        # Converted DAGs use lower-case, sanitized task ids.  Retaining the
+        # original ESP name here makes an all-converted estate fail to find
+        # its target task (for example ``LIE.A`` vs ``lie_a``).
+        fields["external_task_id"] = sanitize_task_id(
+            (task.sensor.external_task_id if task.sensor else None) or task.name
+        ).lower()
         fields["mode"] = "reschedule"
-        return fields
+        return _apply_common_fields(task, fields, retries, review_notes)
 
     if operator == FILE_SENSOR:
         fields["filepath"] = (
@@ -110,7 +122,7 @@ def build_task_fields(task: Task, *, yaml_task_id: str) -> dict[str, Any]:
         )
         fields["poke_interval"] = 60
         fields["mode"] = "poke"
-        return fields
+        return _apply_common_fields(task, fields, retries, review_notes)
 
     if operator == MAINFRAME_DATASET_SENSOR:
         fields["dsname"] = (
@@ -121,41 +133,31 @@ def build_task_fields(task: Task, *, yaml_task_id: str) -> dict[str, Any]:
         )
         fields["mode"] = "reschedule"
         fields["poke_interval"] = 60
-        return fields
+        return _apply_common_fields(task, fields, retries, review_notes)
 
     if operator == EMPTY_OPERATOR:
-        return fields
-
-    notwith_pool = task.params.get("notwith_pool")
+        return _apply_common_fields(task, fields, retries, review_notes)
 
     if operator == AS400_OPERATOR:
         fields["conn_id"] = f"{agent}_AS400" if agent else "as400_default"
         fields["command"] = task.command or ""
         if jobq:
             fields["job_queue"] = jobq
-        if notwith_pool:
-            fields["pool"] = notwith_pool
-        elif task.pool:
-            fields["pool"] = task.pool
-        elif agent:
+        if not task.pool and agent:
             fields["pool"] = agent
-        return fields
+        return _apply_common_fields(task, fields, retries, review_notes)
 
     if operator == WINRM_OPERATOR:
-        fields["winrm_conn_id"] = agent or "winrm_default"
+        # The provider exposes ``ssh_conn_id`` for its WinRM connection.  It
+        # does not accept ``winrm_conn_id``.
+        fields["ssh_conn_id"] = agent or "winrm_default"
         fields["command"] = task.command or ""
-        if notwith_pool:
-            fields["pool"] = notwith_pool
-        elif task.pool:
-            fields["pool"] = task.pool
-        return fields
+        return _apply_common_fields(task, fields, retries, review_notes)
 
     if operator == SSH_OPERATOR:
         fields["ssh_conn_id"] = agent or "ssh_default"
         fields["command"] = _ssh_command(task.command, args)
-        if notwith_pool:
-            fields["pool"] = notwith_pool
-        return fields
+        return _apply_common_fields(task, fields, retries, review_notes)
 
     if operator == SAP_OPERATOR:
         fields["conn_id"] = agent or "sap_default"
@@ -169,17 +171,13 @@ def build_task_fields(task: Task, *, yaml_task_id: str) -> dict[str, Any]:
             fields["sap_job_class"] = _strip_quotes(task.params["sapjobclass"])
         if task.params.get("stepuser"):
             fields["step_user"] = _strip_quotes(task.params["stepuser"])
-        if notwith_pool:
-            fields["pool"] = notwith_pool
-        return fields
+        return _apply_common_fields(task, fields, retries, review_notes)
 
     if operator == MAINFRAME_OPERATOR:
         fields["job_name"] = task.name
         if task.params.get("ccchk"):
             fields["ccchk"] = task.params["ccchk"]
-        if notwith_pool:
-            fields["pool"] = notwith_pool
-        return fields
+        return _apply_common_fields(task, fields, retries, review_notes)
 
     if operator == PYTHON_OPERATOR:
         esp_type = (task.params.get("esp_job_type") or "").upper()
@@ -188,16 +186,37 @@ def build_task_fields(task: Task, *, yaml_task_id: str) -> dict[str, Any]:
         else:
             fields["python_callable"] = "esp_migration.data_object.execute"
         fields["op_kwargs"] = {"esp_job": task.name, "esp_type": esp_type or "DATA_OBJECT"}
-        if notwith_pool:
-            fields["pool"] = notwith_pool
-        return fields
+        return _apply_common_fields(task, fields, retries, review_notes)
 
     if operator == BASH_OPERATOR:
         fields["bash_command"] = _ssh_command(task.command, args)
-        if notwith_pool:
-            fields["pool"] = notwith_pool
-        return fields
+        return _apply_common_fields(task, fields, retries, review_notes)
 
+    return _apply_common_fields(task, fields, retries, review_notes)
+
+
+def _apply_common_fields(
+    task: Task,
+    fields: dict[str, Any],
+    retries: int | None,
+    review_notes: list[str] | None,
+) -> dict[str, Any]:
+    """Add BaseOperator fields consistently across every operator mapping."""
+    notwith_pool = task.params.get("notwith_pool")
+    if notwith_pool:
+        fields["pool"] = notwith_pool
+    elif task.pool and "pool" not in fields:
+        fields["pool"] = task.pool
+    if retries is not None:
+        fields["retries"] = retries
+    if task.priority_weight is not None:
+        fields["priority_weight"] = task.priority_weight
+    if task.trigger_rule:
+        fields["trigger_rule"] = task.trigger_rule
+    if review_notes:
+        fields["doc_md"] = "### ESP migration review\n\n" + "\n".join(
+            f"- {note}" for note in review_notes
+        )
     return fields
 
 

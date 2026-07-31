@@ -276,7 +276,23 @@ DENY_SUBSTR = re.compile(
     r")"
 )
 
+# Identifiers that can reveal an estate even after business names and job ids
+# have been tokenized.  These are replaced after normal token substitution so
+# paths, notification bodies, and event payloads are also covered.
+_EMAIL_RE = re.compile(r"(?i)[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}")
+_PRIVATE_IPV4_RE = re.compile(
+    r"\b(?:10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|"
+    r"172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})\b"
+)
+_UNC_HOST_RE = re.compile(r"(?i)\\\\(?!AGENT\d+\b|SYM\d+\b)[^\\\s'\"+]+")
+_QUOTED_DSTRIG_RE = re.compile(r"(?i)(\bDSTRIG\s+)'[^']+'")
+_RESIDUAL_TERMS_RE = re.compile(
+    r"(?i)\b(?:polkdatauploadssis|adw|cti-rms|bacs|wty|equitble|unmeth|"
+    r"dcexpt|dcftsc|dcnatl|dcrent|dcretl|dcwwork)\b"
+)
+
 IDENT = re.compile(r"\b([A-Za-z][!A-Za-z0-9_#.@*]{0,80})\b")
+PUBLIC_TOKEN = re.compile(r"\b([A-Za-z][!A-Za-z0-9_#.@*-]{2,80})\b")
 PATHISH = re.compile(
     r"(?i)(?:[A-Za-z]:\\[^\s'\"]+|/(?:data|mnt|home|opt|var|tmp|scripts)/[^\s'\"]+)"
 )
@@ -335,6 +351,12 @@ def is_frozen(tok: str) -> bool:
     t = tok.strip("'\"")
     if not t:
         return True
+    if t.upper() == "SYS.ESP.PROCLIB":
+        return True
+    if "." in t or "-" in t:
+        parts = [part for part in re.split(r"[.-]", t) if part]
+        if parts and all(is_frozen(part) for part in parts):
+            return True
     if t.startswith("!"):
         # !ESPAPPL etc. — freeze the leaf after !
         leaf = t[1:].split(".", 1)[-1]
@@ -351,7 +373,7 @@ def is_frozen(tok: str) -> bool:
         return True
     # already synthetic
     if re.fullmatch(
-        r"(?:APP|JOB|AGENT|MBX|ALERT|EVT|RES|PATH|SYM|USER|SAP|DSN|LIB|NW_)\d+",
+        r"(?:APP|JOB|AGENT|MBX|ALERT|EVT|RES|PATH|SYM|USER|SAP|DSN|LIB|NW_|ANON)\d+",
         t,
         re.I,
     ):
@@ -621,7 +643,37 @@ def force_deny_scrub(text: str) -> str:
         r"(?i)\bbsro\b",
     ]:
         text = re.sub(pat, "SYM_SCRUB", text)
+    # Remove infrastructure/network details and free-text notification
+    # recipients.  RFC 2606's example.invalid is intentionally non-routable.
+    text = _EMAIL_RE.sub("EMAIL_REDACTED@example.invalid", text)
+    text = _PRIVATE_IPV4_RE.sub("192.0.2.10", text)
+    text = _UNC_HOST_RE.sub(r"\\\\HOST_REDACTED", text)
+    # Dataset names commonly encode business systems and feeds.  Retain the
+    # DSTRIG shape, not the original identifier.
+    text = _QUOTED_DSTRIG_RE.sub(r"\1'SYNTH.DATASET.REDACTED.G-'", text)
+    text = _RESIDUAL_TERMS_RE.sub("SYM_SCRUB", text)
     return text
+
+
+def strict_public_scrub(texts: list[str]) -> list[str]:
+    """Replace residual human/business tokens in an already-redacted export.
+
+    This is intentionally stricter than the source-to-source mapper.  It is
+    for public demo data: a token that is not an ESP keyword or synthetic id
+    is treated as identifying and is replaced consistently across both files.
+    """
+    mapping: dict[str, str] = {}
+
+    def repl(match: re.Match[str]) -> str:
+        token = match.group(1)
+        if is_frozen(token):
+            return token
+        key = token.upper()
+        if key not in mapping:
+            mapping[key] = f"ANON{len(mapping) + 1:05d}"
+        return mapping[key]
+
+    return [PUBLIC_TOKEN.sub(repl, text) for text in texts]
 
 
 def assert_healthy(schedule: str, events: str) -> None:
@@ -668,9 +720,21 @@ def assert_healthy(schedule: str, events: str) -> None:
             "BLUEMARTINI",
             "DSDNCDLC",
             "ZFSIPSALES",
+            "ONMICROSOFT.COM",
+            "ROC-GROUP.COM",
+            "CDC1-AK-FIS",
+            "BHPFTP",
+            "POLKDATAUPLOADSSIS",
         ]:
             if re.search(re.escape(needle), text, re.I):
                 errors.append(f"{label} still contains {needle}")
+        if any(
+            not email.lower().endswith("@example.invalid")
+            for email in _EMAIL_RE.findall(text)
+        ):
+            errors.append(f"{label} still contains an email address")
+        if _PRIVATE_IPV4_RE.search(text):
+            errors.append(f"{label} still contains a private IPv4 address")
 
     # Keywords must not have been turned into SAP#### as a statement verb
     for kw in ("RELEASE", "VARIANT", "STARTING", "ADD", "RESOURCE", "AFTER"):
@@ -682,7 +746,26 @@ def assert_healthy(schedule: str, events: str) -> None:
     print("Health check OK")
 
 
+def rescrub_public_inputs() -> None:
+    """Apply the strict public-data scrub without requiring private inputs."""
+    schedule = OUT_SCHED.read_text(encoding="utf-8", errors="replace")
+    events = OUT_EVENTS.read_text(encoding="utf-8", errors="replace")
+    schedule = force_deny_scrub(schedule)
+    events = force_deny_scrub(events)
+    schedule, events = strict_public_scrub([schedule, events])
+    # The strict pass can expose address-like fragments; make a final direct
+    # scrub so no routable recipient or private address remains.
+    schedule = force_deny_scrub(schedule)
+    events = force_deny_scrub(events)
+    OUT_SCHED.write_text(schedule, encoding="utf-8", newline="\n")
+    OUT_EVENTS.write_text(events, encoding="utf-8", newline="\n")
+    assert_healthy(schedule, events)
+
+
 def main() -> None:
+    if "--rescrub-public" in sys.argv:
+        rescrub_public_inputs()
+        return
     if not OLD_SCHED.exists() or not OLD_EVENTS.exists():
         raise SystemExit(
             f"Missing OLD inputs.\n  {OLD_SCHED}\n  {OLD_EVENTS}\n"
@@ -715,6 +798,9 @@ def main() -> None:
     schedule = apply_replacements(schedule, items)
     events = apply_replacements(events, items)
 
+    schedule = force_deny_scrub(schedule)
+    events = force_deny_scrub(events)
+    schedule, events = strict_public_scrub([schedule, events])
     schedule = force_deny_scrub(schedule)
     events = force_deny_scrub(events)
 

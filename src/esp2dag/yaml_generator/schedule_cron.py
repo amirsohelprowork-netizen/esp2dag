@@ -13,7 +13,8 @@ def esp_schedule_to_cron(raw: str | None) -> str | None:
     Examples:
         ``11.00 DAILY ... | 19.00 DAILY ...`` → ``0 11,19 * * *``
         ``DAILY`` → ``@daily``
-        ``08.03 EVERY 2 MINUTES ...`` → ``*/2 * * * *`` (approx)
+        ``08.03 EVERY 2 MINUTES ...`` → ``None`` (a cron cannot preserve
+        the 08:03 phase, so it must be reviewed rather than approximated).
     """
     if not raw:
         return None
@@ -26,23 +27,28 @@ def esp_schedule_to_cron(raw: str | None) -> str | None:
     every_min = re.search(r"EVERY\s+(\d+)\s+MINUTES?", upper)
     if every_min:
         n = int(every_min.group(1))
-        if n <= 0:
+        # A time-qualified ESP interval is phase-sensitive.  ``*/n`` starts
+        # at the cron epoch, not at the ESP start time, so emitting it would
+        # change when the job runs.
+        if n <= 0 or _TIME_RE.search(text):
             return None
         if n == 1:
             return "* * * * *"
         return f"*/{n} * * * *"
 
-    times = _TIME_RE.findall(text)
+    times = [(int(hour), int(minute)) for hour, minute in _TIME_RE.findall(text)]
     if times and "DAILY" in upper:
-        hours = sorted({int(h) for h, _m in times})
-        # If all minutes are 00, emit hour-list cron; else first minute only (simple).
-        minutes = {int(m) for _h, m in times}
-        if minutes == {0}:
-            return f"0 {','.join(str(h) for h in hours)} * * *"
-        if len(minutes) == 1:
-            minute = next(iter(minutes))
-            return f"{minute} {','.join(str(h) for h in hours)} * * *"
-        # Mixed minutes: emit one cron per unique hour using first seen minute 0 fallback
-        return f"0 {','.join(str(h) for h in hours)} * * *"
+        pairs = set(times)
+        hours = sorted({hour for hour, _minute in pairs})
+        minutes = sorted({minute for _hour, minute in pairs})
+        # A single cron is exact only when the times are the complete Cartesian
+        # product of the listed hours and minutes.  For example, 08:03 and
+        # 09:12 cannot be represented by one cron without also scheduling
+        # 08:12 and 09:03.
+        if pairs != {(hour, minute) for hour in hours for minute in minutes}:
+            return None
+        minute_part = ",".join(str(minute) for minute in minutes)
+        hour_part = ",".join(str(hour) for hour in hours)
+        return f"{minute_part} {hour_part} * * *"
 
     return None

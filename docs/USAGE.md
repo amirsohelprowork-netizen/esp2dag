@@ -93,7 +93,7 @@ Graphs (`*.mmd`) and YAML `dependencies:` are built from both forms.
 ## Airflow notes
 
 1. Load YAML with [DAG Factory](https://github.com/astronomer/dag-factory) (or your org’s loader).
-2. Create Airflow connections matching `conn_id` / `winrm_conn_id` / `ssh_conn_id` values.
+2. Create Airflow connections matching `conn_id` / `ssh_conn_id` values (WinRM uses `ssh_conn_id` with the provider).
 3. Create pools named `nw_XXXX` with **slots = 1** for ESP `NOTWITH` exclusion groups.
 4. Custom operators (`AS400Operator`, `MainframeSubmitJobOperator`, …) must exist in your Airflow image.
 

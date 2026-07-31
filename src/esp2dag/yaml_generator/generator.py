@@ -15,7 +15,7 @@ from typing import Any
 
 import yaml
 
-from esp2dag.models.workflow import Task, Workflow
+from esp2dag.models.workflow import MappingStatus, Task, Workflow
 from esp2dag.compiler.workflow.notwith import assign_notwith_pools
 from esp2dag.yaml_generator.operators import build_task_fields, infer_owner
 from esp2dag.yaml_generator.schedule_cron import esp_schedule_to_cron
@@ -60,7 +60,12 @@ class DagFactoryYamlGenerator:
         tasks: dict[str, Any] = {}
         for task in workflow.tasks:
             yaml_id = id_map[task.task_id]
-            body = build_task_fields(task, yaml_task_id=yaml_id)
+            body = build_task_fields(
+                task,
+                yaml_task_id=yaml_id,
+                retries=_retries_for(workflow, task),
+                review_notes=_review_notes(workflow, task),
+            )
             deps = upstream.get(yaml_id, [])
             if deps:
                 body["dependencies"] = deps
@@ -95,7 +100,15 @@ class DagFactoryYamlGenerator:
         tasks: list[dict[str, Any]] = []
         for task in workflow.tasks:
             yaml_id = id_map[task.task_id]
-            item = {"task_id": yaml_id, **build_task_fields(task, yaml_task_id=yaml_id)}
+            item = {
+                "task_id": yaml_id,
+                **build_task_fields(
+                    task,
+                    yaml_task_id=yaml_id,
+                    retries=_retries_for(workflow, task),
+                    review_notes=_review_notes(workflow, task),
+                ),
+            }
             deps = upstream.get(yaml_id, [])
             if deps:
                 item["dependencies"] = deps
@@ -130,16 +143,12 @@ def _upstream_map(workflow: Workflow, id_map: dict[str, str]) -> dict[str, list[
 def _schedule_value(workflow: Workflow) -> str | None:
     if workflow.schedule is None:
         return None
-    if workflow.schedule.cron:
-        # Prefer richer conversion from raw event text when available.
-        converted = esp_schedule_to_cron(workflow.schedule.raw_expression)
-        if converted and (
-            workflow.schedule.cron in {"0 0 * * *", "@daily"}
-            or "DAILY" in (workflow.schedule.raw_expression or "").upper()
-        ):
-            return converted
-        return workflow.schedule.cron
-    return esp_schedule_to_cron(workflow.schedule.raw_expression) or workflow.schedule.raw_expression
+    # Never emit an ESP expression as though it were an Airflow cron.  An
+    # unmapped calendar/schedule must remain unscheduled until reviewed.
+    if workflow.schedule.mapping_status != MappingStatus.MAPPED:
+        return None
+    converted = esp_schedule_to_cron(workflow.schedule.raw_expression)
+    return converted or workflow.schedule.cron
 
 
 def _description(workflow: Workflow) -> str:
@@ -157,6 +166,35 @@ def _metadata(task: Task) -> dict[str, Any]:
         "source_line": task.trace.source_line,
         "source_scheduler": "ESP",
     }
+
+
+def _retries_for(workflow: Workflow, task: Task) -> int | None:
+    if task.retry_policy_id is None:
+        return None
+    for policy in workflow.retry_policies:
+        if policy.policy_id == task.retry_policy_id:
+            return policy.max_attempts
+    return None
+
+
+def _review_notes(workflow: Workflow, task: Task) -> list[str]:
+    """Return valid-Airflow documentation for semantics needing a human."""
+    notes = list(task.unsupported_features)
+    for dep in workflow.dependencies:
+        if dep.downstream_task_id != task.task_id:
+            continue
+        if dep.condition:
+            notes.append(
+                f"ESP dependency condition from `{dep.upstream_task_id}`: "
+                f"`{dep.condition}`. "
+                "The generated dependency is success-based; review the trigger rule."
+            )
+        elif dep.kind != "success":
+            notes.append(
+                f"ESP dependency from `{dep.upstream_task_id}` has kind `{dep.kind}`; "
+                "review the generated success-based dependency."
+            )
+    return notes
 
 
 def dump_canonical_yaml(document: dict[str, Any]) -> str:
