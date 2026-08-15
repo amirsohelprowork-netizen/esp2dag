@@ -5,8 +5,8 @@
 ### Option A: Standard Pip (Editable Mode)
 
 ```bash
-git clone https://github.com/amirsohelprowork-netizen/ESP_schedules_to_dagfactory.git
-cd ESP_schedules_to_dagfactory
+git clone https://github.com/amirsohelprowork-netizen/esp2dag.git
+cd esp2dag
 pip install -e .
 python -m esp2dag --help
 ```

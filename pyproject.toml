@@ -5,9 +5,9 @@ description = "CA ESP / Broadcom ESP Workload Automation → Apache Airflow DAG 
 authors = ["Amir Sohel <amirsohelprowork@gmail.com>"]
 readme = "README.md"
 license = "LicenseRef-Source-Available-NonCommercial"
-homepage = "https://github.com/amirsohelprowork-netizen/ESP_schedules_to_dagfactory"
-repository = "https://github.com/amirsohelprowork-netizen/ESP_schedules_to_dagfactory"
-documentation = "https://github.com/amirsohelprowork-netizen/ESP_schedules_to_dagfactory/blob/main/docs/USAGE.md"
+homepage = "https://github.com/amirsohelprowork-netizen/esp2dag"
+repository = "https://github.com/amirsohelprowork-netizen/esp2dag"
+documentation = "https://github.com/amirsohelprowork-netizen/esp2dag/blob/main/docs/USAGE.md"
 packages = [{ include = "esp2dag", from = "src" }]
 keywords = [
     "esp",

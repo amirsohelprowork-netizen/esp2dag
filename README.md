@@ -43,8 +43,8 @@ ESP schedule + events
 ### Install
 
 ```bash
-git clone https://github.com/amirsohelprowork-netizen/ESP_schedules_to_dagfactory.git
-cd ESP_schedules_to_dagfactory
+git clone https://github.com/amirsohelprowork-netizen/esp2dag.git
+cd esp2dag
 
 # Option A: With pip (editable mode)
 pip install -e .

@@ -40,8 +40,8 @@ To request a commercial license or discuss custom converters for other scheduler
 
 If you reference this project publicly, please credit:
 
-> ESP Schedules to DAG Factory (`esp2dag`) by Amir Sohel  
-> https://github.com/amirsohelprowork-netizen/ESP_schedules_to_dagfactory
+> ESP Schedules to Airflow 3 DAGs (`esp2dag`) by Amir Sohel  
+> https://github.com/amirsohelprowork-netizen/esp2dag
 
 ## No warranty
 
