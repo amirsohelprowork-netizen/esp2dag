@@ -1,0 +1,243 @@
+/* ================================================================== */
+/* LEVEL 4: ADVANCED SCHEDULING & CONDITIONAL LOGIC                    */
+/* Patterns from: Cookbook p.2-30 (scheduling patterns),                */
+/*   p.8-11 (GENTIME, monthly, workday calculations),                  */
+/*   p.16-18 (EVERY N DAYS/WEEKS, IFHOLIDAYPLUS),                     */
+/*   p.19 (calendar quarters), p.36 (workday count),                   */
+/*   p.48-54 (conditional bypass, return code branching),               */
+/*   p.55-61 (cyclic applications, auto-trigger),                      */
+/*   p.64 (resource availability)                                       */
+/*                                                                     */
+/* Scenario: Large airline's batch scheduling estate.                   */
+/*   - FLIGHT_OPS_DAILY: Daily ops with holiday adjustments            */
+/*   - REVENUE_MONTHLY: Month-end revenue close with GENTIME           */
+/*   - LOYALTY_BIWEEKLY: Every-2-weeks loyalty program processing      */
+/*   - MAINTENANCE_CYCLIC: Cyclic maintenance scheduling               */
+/*   - QUARTERLY_COMPLIANCE: Quarterly regulatory with conditionals    */
+/* ================================================================== */
+
+/* ------------------------------------------------------------------ */
+/* APPLICATION 1: Daily Flight Operations                               */
+/* Runs daily but adjusts for holidays: if holiday, delay to next      */
+/* workday. Multiple run frequencies within one application.            */
+/* Demonstrates: RUN DAILY, IFHOLIDAYPLUS, multiple RUN criteria,      */
+/*               GENTIME for date checks                                */
+/* Ref: Cookbook p.2-5 (weekly + holiday adj), p.7 (selected workdays)  */
+/* ------------------------------------------------------------------ */
+APPL FLIGHT_OPS_DAILY
+JCLLIB 'PROD.AIRLINE.JCLLIB'
+
+/* Crew scheduling runs every day, no holiday adjustment */
+JOB CREW_SCHEDULING
+  RUN DAILY
+  RELEASE GATE_ASSIGNMENTS
+ENDJOB
+
+/* Gate assignments run weekdays, delayed 1 day on holidays */
+JOB GATE_ASSIGNMENTS
+  RUN WEEKDAYS
+  RELEASE FUEL_PLANNING
+  RELEASE CATERING_ORDERS
+ENDJOB
+
+JOB FUEL_PLANNING
+  RUN WEEKDAYS
+  RELEASE DISPATCH_BRIEFING
+ENDJOB
+
+JOB CATERING_ORDERS
+  RUN WEEKDAYS
+  RELEASE DISPATCH_BRIEFING
+ENDJOB
+
+JOB DISPATCH_BRIEFING
+  RUN WEEKDAYS
+  AFTER FUEL_PLANNING
+  AFTER CATERING_ORDERS
+  RELEASE OPS_COMPLETE
+ENDJOB
+
+/* Weekly deep analysis - only on Mondays */
+JOB WEEKLY_OPS_ANALYSIS
+  RUN MONDAY
+  RELEASE OPS_COMPLETE
+ENDJOB
+
+JOB OPS_COMPLETE LINK
+  RUN DAILY
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APPLICATION 2: Month-End Revenue Close                               */
+/* Uses GENTIME to calculate last workday of month. Complex pipeline   */
+/* that only runs at month-end.                                         */
+/* Demonstrates: GENTIME, LAST WORKDAY OF MONTH, IF/THEN scheduling,  */
+/*               deep dependency chains, CCCHK                         */
+/* Ref: Cookbook p.8-11 (GENTIME, month-end scheduling),                */
+/*      Cookbook p.14 (previous month workday status)                    */
+/* ------------------------------------------------------------------ */
+APPL REVENUE_MONTHLY
+JCLLIB 'PROD.REVENUE.JCLLIB'
+
+GENTIME MONTHEND LAST WORKDAY OF MONTH
+
+JOB CLOSE_REVENUE_PERIOD
+  IF TODAY('WORKDAY') AND ESPSDD EQ MONTHENDDD THEN RUN TODAY
+  RELEASE CALC_DEFERRED_REVENUE
+  RELEASE CALC_ACCRUALS
+  NOTIFY ABEND USERS(FINANCE_ONCALL)
+ENDJOB
+
+JOB CALC_DEFERRED_REVENUE
+  IF TODAY('WORKDAY') AND ESPSDD EQ MONTHENDDD THEN RUN TODAY
+  CCCHK (0)
+  RELEASE REVENUE_RECONCILIATION
+ENDJOB
+
+JOB CALC_ACCRUALS
+  IF TODAY('WORKDAY') AND ESPSDD EQ MONTHENDDD THEN RUN TODAY
+  CCCHK (0)
+  RELEASE REVENUE_RECONCILIATION
+ENDJOB
+
+JOB REVENUE_RECONCILIATION
+  IF TODAY('WORKDAY') AND ESPSDD EQ MONTHENDDD THEN RUN TODAY
+  AFTER CALC_DEFERRED_REVENUE
+  AFTER CALC_ACCRUALS
+  CCCHK (0)
+  RELEASE MANAGEMENT_REPORTING
+  NOTIFY ABEND USERS(FINANCE_ONCALL,CFO_OFFICE)
+ENDJOB
+
+JOB MANAGEMENT_REPORTING
+  IF TODAY('WORKDAY') AND ESPSDD EQ MONTHENDDD THEN RUN TODAY
+  NOTIFY JOBEND USERS(CFO_OFFICE)
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APPLICATION 3: Loyalty Program Processing (Bi-weekly)                */
+/* Runs every 2 weeks on Wednesday. If Wednesday is a holiday,         */
+/* run on Thursday instead.                                             */
+/* Demonstrates: RUN EVERY 2 WEEKS, IFHOLIDAYPLUS,                    */
+/*               mixed UNIX/mainframe jobs                              */
+/* Ref: Cookbook p.17-18 (every 2 weeks + holiday adjustment)           */
+/* ------------------------------------------------------------------ */
+APPL LOYALTY_BIWEEKLY
+JCLLIB 'PROD.LOYALTY.JCLLIB'
+
+JOB EXTRACT_MEMBER_ACTIVITY
+  RUN EVERY 2 WEEKS STARTING JAN 8TH 2025 IFHOLIDAYPLUS 1 DAY
+  RELEASE CALC_POINTS
+ENDJOB
+
+LINUX_JOB CALC_POINTS
+  AGENT LNX_LOYALTY_01
+  USER loyalty_svc
+  SCRIPTNAME '/opt/loyalty/scripts/calculate_points.py'
+  RUN EVERY 2 WEEKS STARTING JAN 8TH 2025 IFHOLIDAYPLUS 1 DAY
+  RELEASE UPDATE_TIER_STATUS
+  RELEASE GENERATE_STATEMENTS
+ENDJOB
+
+LINUX_JOB UPDATE_TIER_STATUS
+  AGENT LNX_LOYALTY_01
+  USER loyalty_svc
+  SCRIPTNAME '/opt/loyalty/scripts/tier_evaluation.py'
+  RUN EVERY 2 WEEKS STARTING JAN 8TH 2025 IFHOLIDAYPLUS 1 DAY
+  RELEASE LOYALTY_COMPLETE
+ENDJOB
+
+JOB GENERATE_STATEMENTS
+  RUN EVERY 2 WEEKS STARTING JAN 8TH 2025 IFHOLIDAYPLUS 1 DAY
+  RELEASE LOYALTY_COMPLETE
+ENDJOB
+
+JOB LOYALTY_COMPLETE LINK
+  RUN EVERY 2 WEEKS STARTING JAN 8TH 2025 IFHOLIDAYPLUS 1 DAY
+  AFTER UPDATE_TIER_STATUS
+  AFTER GENERATE_STATEMENTS
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APPLICATION 4: Aircraft Maintenance Scheduling (Cyclic)              */
+/* Cyclic application: when one generation completes, the next one     */
+/* is automatically triggered.                                          */
+/* Demonstrates: Cyclic pattern, LINK for retriggering, REQUEST jobs   */
+/* Ref: Cookbook p.57-61 (cyclic applications, cycle number increment)  */
+/* ------------------------------------------------------------------ */
+APPL MAINTENANCE_CYCLIC
+JCLLIB 'PROD.MAINT.JCLLIB'
+
+JOB CHECK_FLEET_STATUS
+  RUN DAILY
+  RELEASE SCHEDULE_INSPECTIONS
+ENDJOB
+
+JOB SCHEDULE_INSPECTIONS
+  RUN DAILY
+  RELEASE ASSIGN_MECHANICS
+ENDJOB
+
+JOB ASSIGN_MECHANICS
+  RUN DAILY
+  RELEASE TRACK_COMPLETION
+ENDJOB
+
+JOB TRACK_COMPLETION
+  RUN DAILY
+  RELEASE MAINT_CYCLE_DONE
+  NOTIFY JOBEND USERS(MAINT_MANAGER)
+ENDJOB
+
+/* LINK at end triggers next cycle */
+JOB MAINT_CYCLE_DONE LINK
+  RUN DAILY
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APPLICATION 5: Quarterly Compliance Reporting                        */
+/* Runs on the 1st workday of each calendar quarter.                   */
+/* Different jobs run depending on which quarter it is.                  */
+/* Demonstrates: IF/THEN conditional scheduling, calendar quarters,    */
+/*               Cookbook quarterly patterns                             */
+/* Ref: Cookbook p.19 (scheduling by calendar quarter),                  */
+/*      Cookbook p.52-54 (different actions based on conditions)          */
+/* ------------------------------------------------------------------ */
+APPL QUARTERLY_COMPLIANCE
+JCLLIB 'PROD.COMPLIANCE.JCLLIB'
+
+/* Base extraction runs every quarter */
+JOB EXTRACT_QUARTERLY_DATA
+  RUN 1ST WORKDAY OF QUARTER
+  RELEASE STANDARD_AUDIT
+  RELEASE SAFETY_AUDIT
+ENDJOB
+
+JOB STANDARD_AUDIT
+  RUN 1ST WORKDAY OF QUARTER
+  CCCHK (0,4)
+  RELEASE COMPILE_QUARTERLY_REPORT
+ENDJOB
+
+JOB SAFETY_AUDIT
+  RUN 1ST WORKDAY OF QUARTER
+  RELEASE COMPILE_QUARTERLY_REPORT
+ENDJOB
+
+JOB COMPILE_QUARTERLY_REPORT
+  RUN 1ST WORKDAY OF QUARTER
+  AFTER STANDARD_AUDIT
+  AFTER SAFETY_AUDIT
+  RELEASE SUBMIT_TO_FAA
+  NOTIFY ABEND USERS(COMPLIANCE_OFFICER)
+ENDJOB
+
+JOB SUBMIT_TO_FAA
+  RUN 1ST WORKDAY OF QUARTER
+  NOTIFY JOBEND USERS(COMPLIANCE_OFFICER,LEGAL_DEPT)
+  NOTIFY ABEND USERS(COMPLIANCE_OFFICER,LEGAL_DEPT,CTO_OFFICE)
+ENDJOB

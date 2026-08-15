@@ -1,0 +1,815 @@
+/* ================================================================== */
+/* LEVEL 5: FULL ENTERPRISE PRODUCTION ESTATE                          */
+/* Patterns from: ALL sections of both books combined.                 */
+/*                                                                     */
+/* Scenario: Global financial services conglomerate (bank + trading    */
+/* + insurance + wealth management) running 3000+ jobs nightly.        */
+/* This file represents a realistic subset of a production schedule.   */
+/*                                                                     */
+/* Features demonstrated:                                               */
+/*   - ALL job types: JOB, NT_JOB, UNIX_JOB, LINUX_JOB, AIX_JOB,     */
+/*     AS400_JOB, SAP_JOB                                              */
+/*   - ALL control: EXTERNAL, LINK, DSTRIG, NOTWITH, RESOURCE          */
+/*   - ALL scheduling: DAILY, WEEKDAYS, MONTHLY, EVERY N, GENTIME,    */
+/*     IFHOLIDAYPLUS, IF/THEN, LAST WORKDAY, calendar quarters         */
+/*   - ALL events: time, dataset, application triggers                  */
+/*   - NOTIFY: ABEND, JOBEND, LATEPRED                                 */
+/*   - CCCHK: condition code checking                                   */
+/*   - Complex cross-application dependency webs                        */
+/*   - Resource constraints and mutual exclusion                        */
+/*   - Mixed mainframe + distributed architecture                      */
+/* ================================================================== */
+
+
+/* ================================================================== */
+/*                                                                     */
+/*  TIER 1: CORE BANKING (Mainframe z/OS)                              */
+/*                                                                     */
+/* ================================================================== */
+
+/* ------------------------------------------------------------------ */
+/* APP 1: CORE_BANKING_EOD — End-of-Day Core Banking                   */
+/* The master batch that everything else depends on.                    */
+/* 15-job pipeline covering: transaction posting, interest calc,       */
+/* account revaluation, regulatory capital, and completion marker.      */
+/* Demonstrates: Deep chains, fan-out/fan-in, CCCHK, NOTIFY            */
+/* ------------------------------------------------------------------ */
+APPL CORE_BANKING_EOD
+JCLLIB 'PROD.CORE.JCLLIB'
+
+/* Phase 1: Transaction processing */
+JOB CB_CUTOFF_TRANSACTIONS
+  RUN WEEKDAYS
+  CCCHK (0)
+  RELEASE CB_POST_DEBITS
+  RELEASE CB_POST_CREDITS
+  NOTIFY ABEND USERS(CORE_ONCALL,IT_MANAGER)
+ENDJOB
+
+JOB CB_POST_DEBITS
+  RUN WEEKDAYS
+  CCCHK (0,4)
+  RELEASE CB_UPDATE_BALANCES
+ENDJOB
+
+JOB CB_POST_CREDITS
+  RUN WEEKDAYS
+  CCCHK (0,4)
+  RELEASE CB_UPDATE_BALANCES
+ENDJOB
+
+JOB CB_UPDATE_BALANCES
+  RUN WEEKDAYS
+  AFTER CB_POST_DEBITS
+  AFTER CB_POST_CREDITS
+  CCCHK (0)
+  RELEASE CB_CALC_INTEREST
+  RELEASE CB_CALC_FEES
+  NOTIFY ABEND USERS(CORE_ONCALL)
+ENDJOB
+
+/* Phase 2: Interest and fee calculation */
+JOB CB_CALC_INTEREST
+  RUN WEEKDAYS
+  RELEASE CB_APPLY_CHARGES
+ENDJOB
+
+JOB CB_CALC_FEES
+  RUN WEEKDAYS
+  RELEASE CB_APPLY_CHARGES
+ENDJOB
+
+JOB CB_APPLY_CHARGES
+  RUN WEEKDAYS
+  AFTER CB_CALC_INTEREST
+  AFTER CB_CALC_FEES
+  RELEASE CB_REVALUE_ACCOUNTS
+  RELEASE CB_FX_REVALUATION
+ENDJOB
+
+/* Phase 3: Revaluation */
+JOB CB_REVALUE_ACCOUNTS
+  RUN WEEKDAYS
+  RELEASE CB_REGULATORY_EXTRACT
+ENDJOB
+
+JOB CB_FX_REVALUATION
+  RUN WEEKDAYS
+  RELEASE CB_REGULATORY_EXTRACT
+ENDJOB
+
+/* Phase 4: Regulatory extract and completion */
+JOB CB_REGULATORY_EXTRACT
+  RUN WEEKDAYS
+  AFTER CB_REVALUE_ACCOUNTS
+  AFTER CB_FX_REVALUATION
+  CCCHK (0)
+  RELEASE CB_GENERATE_STATEMENTS
+  RELEASE CB_EOD_COMPLETE
+  NOTIFY ABEND USERS(CORE_ONCALL,REGULATORY_TEAM)
+ENDJOB
+
+JOB CB_GENERATE_STATEMENTS
+  RUN WEEKDAYS
+ENDJOB
+
+/* Master completion marker — all downstream apps wait on this */
+JOB CB_EOD_COMPLETE LINK
+  RUN WEEKDAYS
+  NOTIFY JOBEND USERS(BATCH_CONTROL)
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APP 2: LENDING_BATCH — Loan Processing                              */
+/* Depends on core banking EOD. Processes mortgage and personal loans. */
+/* NOTWITH with CORE_BANKING_EOD: cannot update loan accounts while   */
+/* core banking is updating balances.                                   */
+/* Demonstrates: EXTERNAL, NOTWITH, deep chain                         */
+/* ------------------------------------------------------------------ */
+APPL LENDING_BATCH
+JCLLIB 'PROD.LENDING.JCLLIB'
+
+JOB WAIT_CORE_BANKING EXTERNAL APPLID(CORE_BANKING_EOD)
+  RUN WEEKDAYS
+  RELEASE LN_EXTRACT_PAYMENTS
+ENDJOB
+
+JOB LN_EXTRACT_PAYMENTS
+  RUN WEEKDAYS
+  NOTWITH CB_UPDATE_BALANCES/CORE_BANKING_EOD
+  RELEASE LN_APPLY_PAYMENTS
+ENDJOB
+
+JOB LN_APPLY_PAYMENTS
+  RUN WEEKDAYS
+  CCCHK (0)
+  RELEASE LN_CALC_AMORTIZATION
+  RELEASE LN_PAST_DUE_CHECK
+ENDJOB
+
+JOB LN_CALC_AMORTIZATION
+  RUN WEEKDAYS
+  RELEASE LN_UPDATE_SCHEDULES
+ENDJOB
+
+JOB LN_PAST_DUE_CHECK
+  RUN WEEKDAYS
+  RELEASE LN_COLLECTIONS_NOTIFY
+  RELEASE LN_UPDATE_SCHEDULES
+  NOTIFY JOBEND USERS(COLLECTIONS_TEAM)
+ENDJOB
+
+JOB LN_COLLECTIONS_NOTIFY
+  RUN WEEKDAYS
+ENDJOB
+
+JOB LN_UPDATE_SCHEDULES
+  RUN WEEKDAYS
+  AFTER LN_CALC_AMORTIZATION
+  AFTER LN_PAST_DUE_CHECK
+  RELEASE LN_COMPLETE
+ENDJOB
+
+JOB LN_COMPLETE LINK
+  RUN WEEKDAYS
+ENDJOB
+
+
+/* ================================================================== */
+/*                                                                     */
+/*  TIER 2: TRADING & RISK (AIX + Linux + Mainframe)                   */
+/*                                                                     */
+/* ================================================================== */
+
+/* ------------------------------------------------------------------ */
+/* APP 3: TRADING_SETTLEMENT — Securities Settlement                    */
+/* Mixed mainframe + UNIX jobs. Waits for core banking and market      */
+/* data feeds. DSTRIG for market data file arrival.                     */
+/* Demonstrates: DSTRIG, EXTERNAL, mixed JOB + UNIX_JOB                */
+/* ------------------------------------------------------------------ */
+APPL TRADING_SETTLEMENT
+JCLLIB 'PROD.TRADING.JCLLIB'
+
+/* Wait for market data feed file from Bloomberg */
+DSTRIG WAIT_MARKET_DATA
+  DSNAME 'TRADING.MARKET.PRICES.DAILY'
+  RUN WEEKDAYS
+  RELEASE TS_MATCH_TRADES
+ENDJOB
+
+/* Wait for core banking to finish */
+JOB WAIT_CORE_FOR_SETTLE EXTERNAL APPLID(CORE_BANKING_EOD)
+  RUN WEEKDAYS
+  RELEASE TS_MATCH_TRADES
+ENDJOB
+
+JOB TS_MATCH_TRADES
+  RUN WEEKDAYS
+  AFTER WAIT_MARKET_DATA
+  AFTER WAIT_CORE_FOR_SETTLE
+  RELEASE TS_CALC_SETTLEMENT
+ENDJOB
+
+JOB TS_CALC_SETTLEMENT
+  RUN WEEKDAYS
+  CCCHK (0)
+  RELEASE TS_PROCESS_FAILS
+  RELEASE TS_DELIVER_SECURITIES
+ENDJOB
+
+JOB TS_PROCESS_FAILS
+  RUN WEEKDAYS
+  NOTIFY JOBEND USERS(TRADE_OPS)
+ENDJOB
+
+UNIX_JOB TS_DELIVER_SECURITIES
+  AGENT UNIX_SETTLE_01
+  USER settle_svc
+  SCRIPTNAME '/opt/trading/scripts/deliver_securities.sh'
+  RUN WEEKDAYS
+  RELEASE TS_RECONCILE_POSITIONS
+ENDJOB
+
+UNIX_JOB TS_RECONCILE_POSITIONS
+  AGENT UNIX_SETTLE_01
+  USER settle_svc
+  SCRIPTNAME '/opt/trading/scripts/reconcile_positions.ksh'
+  RUN WEEKDAYS
+  RELEASE TS_SETTLEMENT_COMPLETE
+ENDJOB
+
+JOB TS_SETTLEMENT_COMPLETE LINK
+  RUN WEEKDAYS
+  NOTIFY JOBEND USERS(TRADE_OPS,RISK_TEAM)
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APP 4: MARKET_RISK_VAR — Value-at-Risk Calculation                  */
+/* AIX risk engine. Waits for trading settlement. Heavy compute.        */
+/* NOTWITH with another risk app to prevent resource contention.        */
+/* Demonstrates: AIX_JOB, EXTERNAL, NOTWITH, RESOURCE                  */
+/* Ref: Cookbook p.64 (resource availability)                            */
+/* ------------------------------------------------------------------ */
+APPL MARKET_RISK_VAR
+JCLLIB 'PROD.RISK.JCLLIB'
+
+JOB WAIT_SETTLEMENT EXTERNAL APPLID(TRADING_SETTLEMENT)
+  RUN WEEKDAYS
+  RELEASE MR_LOAD_POSITIONS
+ENDJOB
+
+AIX_JOB MR_LOAD_POSITIONS
+  AGENT AIX_RISK_PROD_01
+  USER riskengine
+  SCRIPTNAME '/opt/risk/scripts/load_positions.ksh'
+  RUN WEEKDAYS
+  RELEASE MR_MONTE_CARLO
+ENDJOB
+
+AIX_JOB MR_MONTE_CARLO
+  AGENT AIX_RISK_PROD_01
+  USER riskengine
+  CMDNAME '/opt/risk/bin/mc_var_engine'
+  ARGS '--iterations 500000 --confidence 0.99 --horizon 10d'
+  RUN WEEKDAYS
+  NOTWITH CR_SIMULATE_DEFAULTS/CREDIT_RISK_BATCH
+  RELEASE MR_STRESS_TEST
+ENDJOB
+
+AIX_JOB MR_STRESS_TEST
+  AGENT AIX_RISK_PROD_02
+  USER riskengine
+  CMDNAME '/opt/risk/bin/stress_test_engine'
+  ARGS '--scenarios /opt/risk/conf/stress_scenarios.json'
+  RUN WEEKDAYS
+  RELEASE MR_AGGREGATE_RISK
+ENDJOB
+
+AIX_JOB MR_AGGREGATE_RISK
+  AGENT AIX_RISK_PROD_01
+  USER riskengine
+  SCRIPTNAME '/opt/risk/scripts/aggregate_risk_metrics.ksh'
+  RUN WEEKDAYS
+  RELEASE MR_RISK_COMPLETE
+  NOTIFY JOBEND USERS(RISK_MANAGER,CRO_OFFICE)
+  NOTIFY ABEND USERS(RISK_ONCALL,RISK_MANAGER)
+ENDJOB
+
+JOB MR_RISK_COMPLETE LINK
+  RUN WEEKDAYS
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APP 5: CREDIT_RISK_BATCH — Credit Risk Analysis                     */
+/* NOTWITH with MARKET_RISK_VAR (they share AIX compute resources).    */
+/* Demonstrates: NOTWITH cross-app, AIX_JOB + mainframe hybrid         */
+/* ------------------------------------------------------------------ */
+APPL CREDIT_RISK_BATCH
+JCLLIB 'PROD.CREDIT.JCLLIB'
+
+JOB WAIT_CORE_FOR_CREDIT EXTERNAL APPLID(CORE_BANKING_EOD)
+  RUN WEEKDAYS
+  RELEASE CR_EXTRACT_EXPOSURES
+ENDJOB
+
+JOB CR_EXTRACT_EXPOSURES
+  RUN WEEKDAYS
+  RELEASE CR_CALC_PD
+  RELEASE CR_CALC_LGD
+ENDJOB
+
+AIX_JOB CR_CALC_PD
+  AGENT AIX_RISK_PROD_01
+  USER riskengine
+  CMDNAME '/opt/risk/bin/pd_model'
+  ARGS '--model logistic --vintage 12m'
+  RUN WEEKDAYS
+  RELEASE CR_SIMULATE_DEFAULTS
+ENDJOB
+
+AIX_JOB CR_CALC_LGD
+  AGENT AIX_RISK_PROD_02
+  USER riskengine
+  CMDNAME '/opt/risk/bin/lgd_model'
+  ARGS '--recovery workout --horizon 3y'
+  RUN WEEKDAYS
+  RELEASE CR_SIMULATE_DEFAULTS
+ENDJOB
+
+AIX_JOB CR_SIMULATE_DEFAULTS
+  AGENT AIX_RISK_PROD_01
+  USER riskengine
+  CMDNAME '/opt/risk/bin/default_simulator'
+  ARGS '--correlations /opt/risk/conf/correlation_matrix.dat'
+  RUN WEEKDAYS
+  AFTER CR_CALC_PD
+  AFTER CR_CALC_LGD
+  NOTWITH MR_MONTE_CARLO/MARKET_RISK_VAR
+  RELEASE CR_PROVISION_CALC
+  NOTIFY ABEND USERS(RISK_ONCALL)
+ENDJOB
+
+JOB CR_PROVISION_CALC
+  RUN WEEKDAYS
+  CCCHK (0)
+  RELEASE CR_RISK_COMPLETE
+  NOTIFY JOBEND USERS(RISK_MANAGER,CFO_OFFICE)
+ENDJOB
+
+JOB CR_RISK_COMPLETE LINK
+  RUN WEEKDAYS
+ENDJOB
+
+
+/* ================================================================== */
+/*                                                                     */
+/*  TIER 3: SAP INTEGRATION (ECC / S4HANA)                             */
+/*                                                                     */
+/* ================================================================== */
+
+/* ------------------------------------------------------------------ */
+/* APP 6: SAP_FINANCIALS — SAP Financial Postings                       */
+/* SAP_JOB types with all SAP-specific attributes.                     */
+/* Waits for core banking and lending to complete before posting.       */
+/* Demonstrates: SAP_JOB, ABAPNAME, VARIANT, SAPJOBCLASS, STEPUSER,   */
+/*               multiple EXTERNAL waits, NOTWITH                      */
+/* Ref: ESP-12.0 §SAP_JOB p.2978, Cookbook p.73                        */
+/* ------------------------------------------------------------------ */
+APPL SAP_FINANCIALS
+JCLLIB 'PROD.SAP.JCLLIB'
+
+JOB WAIT_CORE_FOR_SAP EXTERNAL APPLID(CORE_BANKING_EOD)
+  RUN WEEKDAYS
+  RELEASE SAP_POST_GL
+ENDJOB
+
+JOB WAIT_LENDING_FOR_SAP EXTERNAL APPLID(LENDING_BATCH)
+  RUN WEEKDAYS
+  RELEASE SAP_POST_GL
+ENDJOB
+
+SAP_JOB SAP_POST_GL
+  AGENT SAP_PROD_01
+  ABAPNAME RGGBS000
+  VARIANT PROD_GL_DAILY
+  SAPJOBCLASS A
+  SAPJOBNAME FI_GL_POST
+  STEPUSER BATCHFI
+  RUN WEEKDAYS
+  AFTER WAIT_CORE_FOR_SAP
+  AFTER WAIT_LENDING_FOR_SAP
+  RELEASE SAP_POST_AR
+  RELEASE SAP_POST_AP
+  NOTIFY ABEND USERS(SAP_BASIS,SAP_FI_TEAM)
+ENDJOB
+
+SAP_JOB SAP_POST_AR
+  AGENT SAP_PROD_01
+  ABAPNAME RFEPOS00
+  VARIANT PROD_AR_DAILY
+  SAPJOBCLASS A
+  SAPJOBNAME FI_AR_POST
+  STEPUSER BATCHFI
+  RUN WEEKDAYS
+  RELEASE SAP_RECONCILE
+ENDJOB
+
+SAP_JOB SAP_POST_AP
+  AGENT SAP_PROD_01
+  ABAPNAME RFFOUS_T
+  VARIANT PROD_AP_DAILY
+  SAPJOBCLASS A
+  SAPJOBNAME FI_AP_POST
+  STEPUSER BATCHFI
+  RUN WEEKDAYS
+  RELEASE SAP_RECONCILE
+ENDJOB
+
+SAP_JOB SAP_RECONCILE
+  AGENT SAP_PROD_01
+  ABAPNAME SAPF190
+  VARIANT PROD_RECONCILE
+  SAPJOBCLASS B
+  SAPJOBNAME FI_RECONCILE
+  STEPUSER BATCHFI
+  RUN WEEKDAYS
+  AFTER SAP_POST_AR
+  AFTER SAP_POST_AP
+  NOTWITH SAP_POST_GL
+  RELEASE SAP_FI_COMPLETE
+  NOTIFY ABEND USERS(SAP_BASIS,SAP_FI_TEAM)
+  NOTIFY JOBEND USERS(SAP_FI_TEAM)
+ENDJOB
+
+JOB SAP_FI_COMPLETE LINK
+  RUN WEEKDAYS
+ENDJOB
+
+
+/* ================================================================== */
+/*                                                                     */
+/*  TIER 4: WINDOWS REPORTING & DISTRIBUTED PROCESSING                 */
+/*                                                                     */
+/* ================================================================== */
+
+/* ------------------------------------------------------------------ */
+/* APP 7: WINDOWS_REPORTING — Management Reports on Windows             */
+/* NT_JOB running Crystal Reports, Excel macros, and PDF generators.    */
+/* Waits for SAP and risk apps to complete.                             */
+/* Demonstrates: NT_JOB, multiple EXTERNAL, CMDNAME with .bat/.ps1     */
+/* ------------------------------------------------------------------ */
+APPL WINDOWS_REPORTING
+JCLLIB 'PROD.WINRPT.JCLLIB'
+
+JOB WAIT_SAP_FOR_REPORTS EXTERNAL APPLID(SAP_FINANCIALS)
+  RUN WEEKDAYS
+  RELEASE WR_BUILD_REPORTS
+ENDJOB
+
+JOB WAIT_RISK_FOR_REPORTS EXTERNAL APPLID(MARKET_RISK_VAR)
+  RUN WEEKDAYS
+  RELEASE WR_BUILD_REPORTS
+ENDJOB
+
+NT_JOB WR_BUILD_REPORTS
+  AGENT WIN_RPT_01
+  USER 'BANKDOM\svc_reports'
+  CMDNAME 'E:\Reporting\scripts\build_all_reports.bat'
+  RUN WEEKDAYS
+  AFTER WAIT_SAP_FOR_REPORTS
+  AFTER WAIT_RISK_FOR_REPORTS
+  RELEASE WR_GENERATE_EXECUTIVE
+  RELEASE WR_GENERATE_REGULATORY
+  RELEASE WR_GENERATE_BRANCH
+ENDJOB
+
+NT_JOB WR_GENERATE_EXECUTIVE
+  AGENT WIN_RPT_01
+  USER 'BANKDOM\svc_reports'
+  CMDNAME 'E:\Reporting\scripts\exec_dashboard.ps1'
+  RUN WEEKDAYS
+  RELEASE WR_DISTRIBUTE
+ENDJOB
+
+NT_JOB WR_GENERATE_REGULATORY
+  AGENT WIN_RPT_02
+  USER 'BANKDOM\svc_reports'
+  CMDNAME 'E:\Reporting\scripts\regulatory_reports.bat'
+  RUN WEEKDAYS
+  RELEASE WR_DISTRIBUTE
+ENDJOB
+
+NT_JOB WR_GENERATE_BRANCH
+  AGENT WIN_RPT_02
+  USER 'BANKDOM\svc_reports'
+  CMDNAME 'E:\Reporting\scripts\branch_reports.bat'
+  RUN WEEKDAYS
+  RELEASE WR_DISTRIBUTE
+ENDJOB
+
+NT_JOB WR_DISTRIBUTE
+  AGENT WIN_RPT_01
+  USER 'BANKDOM\svc_reports'
+  CMDNAME 'E:\Reporting\scripts\distribute_reports.ps1'
+  RUN WEEKDAYS
+  AFTER WR_GENERATE_EXECUTIVE
+  AFTER WR_GENERATE_REGULATORY
+  AFTER WR_GENERATE_BRANCH
+  NOTIFY JOBEND USERS(REPORT_ADMIN,EXEC_ASST)
+  NOTIFY ABEND USERS(REPORT_ADMIN,IT_MANAGER)
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APP 8: DATA_LAKE_INGESTION — Linux-based data lake pipeline          */
+/* Ingests data from all upstream systems into Hadoop/Spark cluster.    */
+/* Multiple EXTERNAL waits, LINUX_JOBs, dataset triggers.              */
+/* Demonstrates: LINUX_JOB, multiple EXTERNALs, DSTRIG, CMDNAME+ARGS  */
+/* ------------------------------------------------------------------ */
+APPL DATA_LAKE_INGESTION
+JCLLIB 'PROD.DATALAKE.JCLLIB'
+
+JOB WAIT_CORE_FOR_LAKE EXTERNAL APPLID(CORE_BANKING_EOD)
+  RUN DAILY
+  RELEASE DL_INGEST_CORE
+ENDJOB
+
+JOB WAIT_TRADING_FOR_LAKE EXTERNAL APPLID(TRADING_SETTLEMENT)
+  RUN WEEKDAYS
+  RELEASE DL_INGEST_TRADING
+ENDJOB
+
+/* Dataset trigger: SAP extract file arrives */
+DSTRIG DL_WAIT_SAP_EXTRACT
+  DSNAME 'SAP.EXTRACT.DAILY.FEED'
+  RUN WEEKDAYS
+  RELEASE DL_INGEST_SAP
+ENDJOB
+
+LINUX_JOB DL_INGEST_CORE
+  AGENT LNX_HADOOP_01
+  USER hadoop_svc
+  SCRIPTNAME '/opt/datalake/scripts/ingest_core_banking.sh'
+  RUN DAILY
+  RELEASE DL_BUILD_UNIFIED_VIEW
+ENDJOB
+
+LINUX_JOB DL_INGEST_TRADING
+  AGENT LNX_HADOOP_01
+  USER hadoop_svc
+  SCRIPTNAME '/opt/datalake/scripts/ingest_trading.sh'
+  RUN WEEKDAYS
+  RELEASE DL_BUILD_UNIFIED_VIEW
+ENDJOB
+
+LINUX_JOB DL_INGEST_SAP
+  AGENT LNX_HADOOP_02
+  USER hadoop_svc
+  SCRIPTNAME '/opt/datalake/scripts/ingest_sap.sh'
+  RUN WEEKDAYS
+  RELEASE DL_BUILD_UNIFIED_VIEW
+ENDJOB
+
+LINUX_JOB DL_BUILD_UNIFIED_VIEW
+  AGENT LNX_HADOOP_01
+  USER hadoop_svc
+  CMDNAME '/opt/spark/bin/spark-submit'
+  ARGS '--master yarn --deploy-mode cluster --class com.bank.UnifiedView /opt/datalake/jars/unified_view.jar'
+  RUN DAILY
+  AFTER DL_INGEST_CORE
+  RELEASE DL_QUALITY_CHECKS
+ENDJOB
+
+LINUX_JOB DL_QUALITY_CHECKS
+  AGENT LNX_HADOOP_02
+  USER hadoop_svc
+  SCRIPTNAME '/opt/datalake/scripts/data_quality_checks.py'
+  RUN DAILY
+  RELEASE DL_COMPLETE
+  NOTIFY ABEND USERS(DATA_ENGINEERING)
+ENDJOB
+
+JOB DL_COMPLETE LINK
+  RUN DAILY
+  NOTIFY JOBEND USERS(DATA_ENGINEERING,ANALYTICS_TEAM)
+ENDJOB
+
+
+/* ================================================================== */
+/*                                                                     */
+/*  TIER 5: MONTH-END / REGULATORY (Complex scheduling)                */
+/*                                                                     */
+/* ================================================================== */
+
+/* ------------------------------------------------------------------ */
+/* APP 9: MONTH_END_CLOSE — Month-End Financial Close                   */
+/* Only runs on last workday of month. GENTIME for date calculation.   */
+/* Waits for ALL daily processes before starting.                       */
+/* Demonstrates: GENTIME, LAST WORKDAY OF MONTH, IF/THEN,             */
+/*               multiple EXTERNALs, CCCHK, deep chain, SAP_JOB       */
+/* Ref: Cookbook p.8-11 (GENTIME month-end patterns)                    */
+/* ------------------------------------------------------------------ */
+APPL MONTH_END_CLOSE
+JCLLIB 'PROD.MONTHEND.JCLLIB'
+
+GENTIME LDOM LAST WORKDAY OF MONTH
+
+JOB WAIT_ALL_DAILY_CORE EXTERNAL APPLID(CORE_BANKING_EOD)
+  IF TODAY('WORKDAY') AND ESPSDD EQ LDOMDD THEN RUN TODAY
+  RELEASE ME_FREEZE_ACCOUNTS
+ENDJOB
+
+JOB WAIT_ALL_DAILY_SAP EXTERNAL APPLID(SAP_FINANCIALS)
+  IF TODAY('WORKDAY') AND ESPSDD EQ LDOMDD THEN RUN TODAY
+  RELEASE ME_FREEZE_ACCOUNTS
+ENDJOB
+
+JOB ME_FREEZE_ACCOUNTS
+  IF TODAY('WORKDAY') AND ESPSDD EQ LDOMDD THEN RUN TODAY
+  AFTER WAIT_ALL_DAILY_CORE
+  AFTER WAIT_ALL_DAILY_SAP
+  CCCHK (0)
+  RELEASE ME_ACCRUE_INTEREST
+  RELEASE ME_ACCRUE_EXPENSES
+  NOTIFY ABEND USERS(FINANCE_ONCALL,CFO_OFFICE)
+ENDJOB
+
+JOB ME_ACCRUE_INTEREST
+  IF TODAY('WORKDAY') AND ESPSDD EQ LDOMDD THEN RUN TODAY
+  RELEASE ME_TRIAL_BALANCE
+ENDJOB
+
+JOB ME_ACCRUE_EXPENSES
+  IF TODAY('WORKDAY') AND ESPSDD EQ LDOMDD THEN RUN TODAY
+  RELEASE ME_TRIAL_BALANCE
+ENDJOB
+
+JOB ME_TRIAL_BALANCE
+  IF TODAY('WORKDAY') AND ESPSDD EQ LDOMDD THEN RUN TODAY
+  AFTER ME_ACCRUE_INTEREST
+  AFTER ME_ACCRUE_EXPENSES
+  CCCHK (0)
+  RELEASE ME_INTERCOMPANY_ELIM
+  NOTIFY ABEND USERS(FINANCE_ONCALL)
+ENDJOB
+
+JOB ME_INTERCOMPANY_ELIM
+  IF TODAY('WORKDAY') AND ESPSDD EQ LDOMDD THEN RUN TODAY
+  RELEASE ME_CONSOLIDATION
+ENDJOB
+
+JOB ME_CONSOLIDATION
+  IF TODAY('WORKDAY') AND ESPSDD EQ LDOMDD THEN RUN TODAY
+  CCCHK (0)
+  RELEASE ME_POST_TO_SAP
+  NOTIFY ABEND USERS(FINANCE_ONCALL,CFO_OFFICE)
+ENDJOB
+
+SAP_JOB ME_POST_TO_SAP
+  AGENT SAP_PROD_01
+  ABAPNAME RGGBS000
+  VARIANT MONTH_END_CLOSE
+  SAPJOBCLASS A
+  SAPJOBNAME FI_MONTH_CLOSE
+  STEPUSER BATCHFI
+  IF TODAY('WORKDAY') AND ESPSDD EQ LDOMDD THEN RUN TODAY
+  RELEASE ME_CLOSE_COMPLETE
+  NOTIFY ABEND USERS(SAP_BASIS,FINANCE_ONCALL,CFO_OFFICE)
+  NOTIFY JOBEND USERS(CFO_OFFICE,CONTROLLER)
+ENDJOB
+
+JOB ME_CLOSE_COMPLETE LINK
+  IF TODAY('WORKDAY') AND ESPSDD EQ LDOMDD THEN RUN TODAY
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APP 10: REGULATORY_CAPITAL — Basel III/IV Capital Calculations        */
+/* Quarterly regulatory submission. Only runs 1st workday of quarter.  */
+/* Combines mainframe extracts, AIX risk engines, SAP postings,        */
+/* and Windows report generation.                                       */
+/* Demonstrates: Quarterly scheduling, ALL job types in one app,       */
+/*               cross-platform pipeline, deep dependency chain         */
+/* Ref: Cookbook p.19 (quarterly), p.52-54 (conditional branching)      */
+/* ------------------------------------------------------------------ */
+APPL REGULATORY_CAPITAL
+JCLLIB 'PROD.REGCAP.JCLLIB'
+
+/* Mainframe: Extract positions */
+JOB RC_EXTRACT_POSITIONS
+  RUN 1ST WORKDAY OF QUARTER
+  RELEASE RC_EXTRACT_RISK_WEIGHTS
+ENDJOB
+
+JOB RC_EXTRACT_RISK_WEIGHTS
+  RUN 1ST WORKDAY OF QUARTER
+  RELEASE RC_CALC_RWA
+ENDJOB
+
+/* AIX: Heavy risk-weighted asset calculation */
+AIX_JOB RC_CALC_RWA
+  AGENT AIX_RISK_PROD_01
+  USER riskengine
+  CMDNAME '/opt/risk/bin/rwa_calculator'
+  ARGS '--framework basel4 --approach advanced'
+  RUN 1ST WORKDAY OF QUARTER
+  RELEASE RC_CALC_CAPITAL_RATIO
+  NOTIFY ABEND USERS(RISK_ONCALL,REGULATORY_TEAM)
+ENDJOB
+
+/* Mainframe: Capital adequacy ratio */
+JOB RC_CALC_CAPITAL_RATIO
+  RUN 1ST WORKDAY OF QUARTER
+  CCCHK (0)
+  RELEASE RC_BUILD_SUBMISSION
+ENDJOB
+
+/* Linux: Build XML submission package */
+LINUX_JOB RC_BUILD_SUBMISSION
+  AGENT LNX_REGULATORY_01
+  USER regulatory_svc
+  SCRIPTNAME '/opt/regulatory/scripts/build_corep_xml.py'
+  RUN 1ST WORKDAY OF QUARTER
+  RELEASE RC_SAP_POST_CAPITAL
+  RELEASE RC_GENERATE_BOARD_REPORT
+ENDJOB
+
+/* SAP: Post capital figures */
+SAP_JOB RC_SAP_POST_CAPITAL
+  AGENT SAP_PROD_01
+  ABAPNAME ZREGCAP01
+  VARIANT QUARTERLY_CAPITAL
+  SAPJOBCLASS A
+  SAPJOBNAME REG_CAPITAL_POST
+  STEPUSER BATCHREG
+  RUN 1ST WORKDAY OF QUARTER
+  RELEASE RC_SUBMIT_TO_REGULATOR
+ENDJOB
+
+/* Windows: Board report generation (Crystal Reports) */
+NT_JOB RC_GENERATE_BOARD_REPORT
+  AGENT WIN_RPT_01
+  USER 'BANKDOM\svc_reports'
+  CMDNAME 'E:\Regulatory\scripts\generate_board_capital_report.bat'
+  RUN 1ST WORKDAY OF QUARTER
+  RELEASE RC_SUBMIT_TO_REGULATOR
+ENDJOB
+
+JOB RC_SUBMIT_TO_REGULATOR
+  RUN 1ST WORKDAY OF QUARTER
+  AFTER RC_SAP_POST_CAPITAL
+  AFTER RC_GENERATE_BOARD_REPORT
+  NOTIFY JOBEND USERS(REGULATORY_TEAM,CRO_OFFICE,BOARD_SECRETARY)
+  NOTIFY ABEND USERS(REGULATORY_TEAM,CRO_OFFICE,IT_MANAGER)
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APP 11: AS400_LEGACY_FEEDS — iSeries Legacy Data Feeds               */
+/* AS400 jobs feeding data to modern systems. Runs daily.               */
+/* NOTWITH with DATA_LAKE_INGESTION to prevent concurrent reads.        */
+/* Demonstrates: AS400_JOB, NOTWITH cross-app, COMMAND, JOBQ           */
+/* ------------------------------------------------------------------ */
+APPL AS400_LEGACY_FEEDS
+JCLLIB 'PROD.AS400.JCLLIB'
+
+AS400_JOB AS4_EXTRACT_CUSTOMERS
+  AGENT AS400_FINANCE_01
+  USER QSECOFR
+  COMMAND 'CALL PGM(FINLIB/CUSTEXT) PARM(DAILY PROD)'
+  JOBQ QBATCH
+  RUN DAILY
+  NOTWITH DL_INGEST_CORE/DATA_LAKE_INGESTION
+  RELEASE AS4_EXTRACT_ACCOUNTS
+ENDJOB
+
+AS400_JOB AS4_EXTRACT_ACCOUNTS
+  AGENT AS400_FINANCE_01
+  USER QSECOFR
+  COMMAND 'CALL PGM(FINLIB/ACCTEXT) PARM(DAILY PROD)'
+  JOBQ QBATCH
+  RUN DAILY
+  RELEASE AS4_TRANSFORM_DATA
+ENDJOB
+
+AS400_JOB AS4_TRANSFORM_DATA
+  AGENT AS400_FINANCE_01
+  USER QSECOFR
+  COMMAND 'CALL PGM(FINLIB/XFORMDAT) PARM(FULL)'
+  JOBQ QBATCH
+  RUN DAILY
+  RELEASE AS4_SEND_TO_MQ
+ENDJOB
+
+AS400_JOB AS4_SEND_TO_MQ
+  AGENT AS400_FINANCE_01
+  USER QSECOFR
+  COMMAND 'CALL PGM(FINLIB/MQSEND) PARM(PROD.QUEUE.LEGACY)'
+  JOBQ QBATCH
+  RUN DAILY
+  NOTIFY JOBEND USERS(AS400_ADMIN)
+  NOTIFY ABEND USERS(AS400_ADMIN,IT_MANAGER)
+ENDJOB

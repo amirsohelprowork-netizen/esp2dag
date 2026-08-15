@@ -47,6 +47,11 @@ def test_esp_schedule_to_cron_weekday_time() -> None:
     assert esp_schedule_to_cron("08.00 WEEKDAYS") == "0 8 * * 1-5"
 
 
+def test_esp_schedule_to_cron_does_not_change_calendar_workdays_or_anchor_day() -> None:
+    assert esp_schedule_to_cron("08.00 WORKDAYS STARTING MON 1ST JAN 2024") is None
+    assert esp_schedule_to_cron("08.00 STARTING MON 1ST JAN 2024") is None
+
+
 def test_event_schedule_overrides_run_daily_midnight() -> None:
     """Event ``02.15 MON`` must not keep a job-level RUN DAILY ``0 0 * * *``."""
     content = (

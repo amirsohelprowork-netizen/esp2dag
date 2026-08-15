@@ -1,0 +1,100 @@
+/* ================================================================== */
+/* LEVEL 5: ENTERPRISE EVENTS                                          */
+/* Full production event estate for the financial services batch.       */
+/* Time-based, dataset-triggered, and application-triggered events.    */
+/*                                                                     */
+/* Ref: Cookbook p.35 (dynamic events), p.55 (auto-triggering),         */
+/*      p.67-68 (data set + time + weekday combo),                     */
+/*      p.77 (consolidating data set triggers),                         */
+/*      Reference §EVENT p.2679, §SCHEDULE, §DSTRIG p.2643            */
+/* ================================================================== */
+
+/* ============ TIER 1: Core Banking Events ============ */
+
+/* Core banking batch fires at 18:30 weekdays (after branch close) */
+EVENT ID(PROD.CORE_BANKING_EOD) SYSTEM(ESPM) REPLACE
+SCHEDULE 18.30 WEEKDAYS
+INVOKE 'PROD.PROCLIB(CORE_BANKING_EOD)'
+ENDDEF
+
+/* Lending batch at 20:00 weekdays (after core banking expected done) */
+EVENT ID(PROD.LENDING_BATCH) SYSTEM(ESPM) REPLACE
+SCHEDULE 20.00 WEEKDAYS
+INVOKE 'PROD.PROCLIB(LENDING_BATCH)'
+ENDDEF
+
+
+/* ============ TIER 2: Trading & Risk Events ============ */
+
+/* Market data feed arrives from Bloomberg - dataset trigger */
+EVENT ID(PROD.MARKET_DATA_FEED) SYSTEM(ESPM) REPLACE
+DSTRIG TRADING.MARKET.PRICES.DAILY
+INVOKE 'PROD.PROCLIB(TRADING_SETTLEMENT)'
+ENDDEF
+
+/* Trading settlement also has a time-based backup at 19:00 */
+EVENT ID(PROD.TRADING_SETTLEMENT) SYSTEM(ESPM) REPLACE
+SCHEDULE 19.00 WEEKDAYS
+INVOKE 'PROD.PROCLIB(TRADING_SETTLEMENT)'
+ENDDEF
+
+/* Risk calculations at 21:00 weekdays */
+EVENT ID(PROD.MARKET_RISK) SYSTEM(ESPM) REPLACE
+SCHEDULE 21.00 WEEKDAYS
+INVOKE 'PROD.PROCLIB(MARKET_RISK_VAR)'
+ENDDEF
+
+EVENT ID(PROD.CREDIT_RISK) SYSTEM(ESPM) REPLACE
+SCHEDULE 22.00 WEEKDAYS
+INVOKE 'PROD.PROCLIB(CREDIT_RISK_BATCH)'
+ENDDEF
+
+
+/* ============ TIER 3: SAP Events ============ */
+
+/* SAP financials at 23:00 weekdays */
+EVENT ID(PROD.SAP_FINANCIALS) SYSTEM(ESPM) REPLACE
+SCHEDULE 23.00 WEEKDAYS
+INVOKE 'PROD.PROCLIB(SAP_FINANCIALS)'
+ENDDEF
+
+
+/* ============ TIER 4: Reporting & Data Lake Events ============ */
+
+/* Windows reporting at 04:00 (after all nightly batches) */
+EVENT ID(PROD.WIN_REPORTS) SYSTEM(ESPM) REPLACE
+SCHEDULE 04.00 WEEKDAYS
+INVOKE 'PROD.PROCLIB(WINDOWS_REPORTING)'
+ENDDEF
+
+/* Data lake ingestion at 01:00 daily */
+EVENT ID(PROD.DATALAKE_INGEST) SYSTEM(ESPM) REPLACE
+SCHEDULE 01.00 DAILY
+INVOKE 'PROD.PROCLIB(DATA_LAKE_INGESTION)'
+ENDDEF
+
+/* SAP extract file trigger for data lake */
+EVENT ID(PROD.SAP_EXTRACT_FILE) SYSTEM(ESPM) REPLACE
+DSTRIG SAP.EXTRACT.DAILY.FEED
+ENDDEF
+
+
+/* ============ TIER 5: Month-End & Regulatory Events ============ */
+
+/* Month-end close on last workday of month at 19:00 */
+EVENT ID(PROD.MONTH_END) SYSTEM(ESPM) REPLACE
+SCHEDULE 19.00 LAST WORKDAY OF MONTH
+INVOKE 'PROD.PROCLIB(MONTH_END_CLOSE)'
+ENDDEF
+
+/* Quarterly regulatory at 08:00, 1st workday of quarter */
+EVENT ID(PROD.REGULATORY_CAPITAL) SYSTEM(ESPM) REPLACE
+SCHEDULE 08.00 1ST WORKDAY OF QUARTER
+INVOKE 'PROD.PROCLIB(REGULATORY_CAPITAL)'
+ENDDEF
+
+/* AS400 legacy feeds at 17:00 daily */
+EVENT ID(PROD.AS400_FEEDS) SYSTEM(ESPM) REPLACE
+SCHEDULE 17.00 DAILY
+INVOKE 'PROD.PROCLIB(AS400_LEGACY_FEEDS)'
+ENDDEF

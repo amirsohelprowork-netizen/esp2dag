@@ -80,13 +80,23 @@ def esp_schedule_to_cron(raw: str | None) -> str | None:
 
 def _day_of_week_field(upper: str) -> str | None:
     """Return a cron DOW field, or None when the expression is not day-scoped."""
+    # ESP WORKDAYS is calendar-aware (weekends and site holidays).  Cron can
+    # express weekdays but cannot faithfully express ESP's holiday calendar,
+    # so do not silently turn WORKDAYS into Monday-Friday.  The cookbook also
+    # uses holiday/workday shifts (LESS/PLUS/IFHOLIDAY); those require a
+    # custom Airflow timetable or an explicit calendar gate.
+    if "WORKDAY" in upper or "HOLIDAY" in upper:
+        return None
     if "WEEKDAYS" in upper:
         return "1-5"
     if "WEEKEND" in upper:
         return "0,6"
 
+    # A weekday in an ESP STARTING date is an anchor, not a recurrence.  For
+    # example, ``06.30 STARTING MON 1ST JAN 2024`` is not a Monday schedule.
+    recurrence_part = upper.split("STARTING", 1)[0]
     found: list[str] = []
-    for match in _DOW_RE.finditer(upper):
+    for match in _DOW_RE.finditer(recurrence_part):
         token = match.group(1).upper()
         if token in {"WEEKDAYS", "WEEKEND"}:
             continue

@@ -1,0 +1,22 @@
+/* ================================================================== */
+/* LEVEL 1: EVENTS for basic batch applications                       */
+/* Patterns from: Reference §EVENT, §SCHEDULE                         */
+/* ================================================================== */
+
+/* Daily account batch runs at 22:00 (10 PM) every day */
+EVENT ID(PROD.ACCT_DAILY) SYSTEM(ESPM) REPLACE
+SCHEDULE 22.00 DAILY
+INVOKE 'PROD.PROCLIB(ACCT_DAILY_BATCH)'
+ENDDEF
+
+/* GL posting runs at 23:00 weekdays only */
+EVENT ID(PROD.GL_NIGHTLY) SYSTEM(ESPM) REPLACE
+SCHEDULE 23.00 WEEKDAYS
+INVOKE 'PROD.PROCLIB(GL_POSTING)'
+ENDDEF
+
+/* Reports run at 05:00 next morning */
+EVENT ID(PROD.EOD_REPORTS) SYSTEM(ESPM) REPLACE
+SCHEDULE 05.00 DAILY
+INVOKE 'PROD.PROCLIB(REPORT_DISTRIBUTION)'
+ENDDEF

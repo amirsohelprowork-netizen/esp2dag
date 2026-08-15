@@ -2,8 +2,8 @@
 
 **Project:** `esp2dag`  
 **Nature:** Compiler (not a text converter)  
-**Target:** ESP Workload Automation → DAG Factory YAML → (optional) Apache Airflow DAGs  
-**Status:** Design complete — awaiting approval before stage implementation
+**Target:** ESP Workload Automation → native Apache Airflow 3 DAGs (plus optional DAG Factory YAML)  
+**Status:** Native Airflow 3 DAG and DAG Factory YAML backends implemented
 
 ---
 
@@ -355,12 +355,12 @@ Approved sequence — **one stage at a time**, each with unit + golden tests bef
 6. Phase 5 — Workflow Builder (IR)
 7. Phase 6 — Event Parser + Merger
 8. Phase 7 — DAG Factory YAML Generator
-9. Phase 8 — Airflow Generator (optional path)
+9. Phase 8 — Airflow Generator (native Python DAG backend)
 10. Phase 9 — Graphs
 11. Phase 10 — Reports
 12. CLI wiring + integration/e2e tests
 
-**Awaiting explicit approval to begin Phase 8 (Airflow DAG Generator).**
+Phase 8 emits deterministic Airflow 3 modules using `airflow.sdk.DAG` and the same Workflow IR used by the YAML backend.
 
 Phase 7 emits deterministic DAG Factory YAML (`default` dict/`depends_on` profile,
 or `--profile astronomer` list/`dependencies`) with mandatory ESP source metadata.

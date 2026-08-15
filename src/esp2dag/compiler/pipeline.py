@@ -197,9 +197,20 @@ class CompilerPipeline:
                     )
 
         if options.emit_airflow and self._airflow_generator is not None:
-            raise NotImplementedError(
-                "Phase 8 Airflow DAG generation is deferred; YAML is the deliverable."
-            )
+            dag_dir = request.output_dir / "dags"
+            dag_dir.mkdir(parents=True, exist_ok=True)
+            for workflow in workflows:
+                text = self._airflow_generator.generate(workflow)
+                path = dag_dir / f"{workflow.id}.py"
+                path.write_text(text, encoding="utf-8")
+                artifacts.append(
+                    ArtifactRef(
+                        kind=ArtifactKind.AIRFLOW_DAG,
+                        path=path,
+                        workflow_id=workflow.id,
+                        format="python",
+                    )
+                )
 
         statistics = _build_statistics(applications, workflows, failures, diagnostics)
         result = CompileResult(

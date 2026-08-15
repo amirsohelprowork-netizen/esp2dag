@@ -1,0 +1,124 @@
+/* ================================================================== */
+/* LEVEL 1: BASIC MAINFRAME BATCH                                     */
+/* Patterns from: ESP Cookbook p.2-5, Reference §JOB, §JCLLIB          */
+/*                                                                     */
+/* Scenario: Nightly batch processing for a retail bank.               */
+/*   - ACCT_DAILY_BATCH: Daily account processing pipeline             */
+/*   - GL_POSTING: General ledger posting with condition code checks   */
+/*   - REPORT_DISTRIBUTION: End-of-day report generation               */
+/* ================================================================== */
+
+/* ------------------------------------------------------------------ */
+/* APPLICATION 1: Daily Account Processing                             */
+/* A sequential 5-job pipeline that extracts transactions, validates,  */
+/* posts to accounts, reconciles, and produces an audit trail.         */
+/* Demonstrates: JCLLIB, RUN DAILY, RELEASE chains, CCCHK             */
+/* ------------------------------------------------------------------ */
+APPL ACCT_DAILY_BATCH
+JCLLIB 'PROD.BANKING.JCLLIB'
+
+JOB EXTRACT_TRANSACTIONS
+  RUN DAILY
+  RELEASE VALIDATE_DATA
+ENDJOB
+
+JOB VALIDATE_DATA
+  RUN DAILY
+  CCCHK (0,4)                    /* Accept RC 0 or 4 (warnings OK) */
+  RELEASE POST_ACCOUNTS
+  RELEASE ERR_HANDLER            /* Also release error handler */
+ENDJOB
+
+JOB POST_ACCOUNTS
+  RUN DAILY
+  RELEASE RECONCILE
+ENDJOB
+
+JOB RECONCILE
+  RUN DAILY
+  RELEASE AUDIT_TRAIL
+ENDJOB
+
+JOB AUDIT_TRAIL
+  RUN DAILY
+ENDJOB
+
+/* Error handler only runs if VALIDATE_DATA releases it */
+JOB ERR_HANDLER
+  RUN DAILY
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APPLICATION 2: General Ledger Posting                               */
+/* Parallel fan-out: multiple ledger sub-systems post simultaneously,  */
+/* then a final merge step waits for all.                              */
+/* Demonstrates: Parallel RELEASE, AFTER (fan-in), RUN WEEKDAYS       */
+/* ------------------------------------------------------------------ */
+APPL GL_POSTING
+JCLLIB 'PROD.GL.JCLLIB'
+
+JOB GL_INITIALIZE
+  RUN WEEKDAYS
+  RELEASE GL_POST_AR
+  RELEASE GL_POST_AP
+  RELEASE GL_POST_PAYROLL
+ENDJOB
+
+JOB GL_POST_AR
+  RUN WEEKDAYS
+  RELEASE GL_CONSOLIDATE
+ENDJOB
+
+JOB GL_POST_AP
+  RUN WEEKDAYS
+  RELEASE GL_CONSOLIDATE
+ENDJOB
+
+JOB GL_POST_PAYROLL
+  RUN WEEKDAYS
+  RELEASE GL_CONSOLIDATE
+ENDJOB
+
+/* Fan-in: GL_CONSOLIDATE waits for all three sub-ledger posts */
+JOB GL_CONSOLIDATE
+  RUN WEEKDAYS
+  AFTER GL_POST_AR
+  AFTER GL_POST_AP
+  AFTER GL_POST_PAYROLL
+  RELEASE GL_BALANCE_CHECK
+ENDJOB
+
+JOB GL_BALANCE_CHECK
+  RUN WEEKDAYS
+  CCCHK (0)                      /* Must complete with RC=0 */
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APPLICATION 3: End-of-Day Report Distribution                       */
+/* Simple report pipeline with branching: different reports go to      */
+/* different printers/destinations.                                    */
+/* Demonstrates: Multiple independent job chains, RUN DAILY            */
+/* ------------------------------------------------------------------ */
+APPL REPORT_DISTRIBUTION
+JCLLIB 'PROD.REPORTS.JCLLIB'
+
+JOB BUILD_DAILY_SUMMARY
+  RUN DAILY
+  RELEASE PRINT_BRANCH_REPORTS
+  RELEASE PRINT_EXEC_SUMMARY
+  RELEASE ARCHIVE_REPORTS
+ENDJOB
+
+JOB PRINT_BRANCH_REPORTS
+  RUN DAILY
+ENDJOB
+
+JOB PRINT_EXEC_SUMMARY
+  RUN DAILY
+ENDJOB
+
+JOB ARCHIVE_REPORTS
+  RUN DAILY
+ENDJOB

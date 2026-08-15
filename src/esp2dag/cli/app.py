@@ -29,7 +29,7 @@ from esp2dag.utils import configure_logging
 
 app = typer.Typer(
     name="esp2dag",
-    help="ESP Workload Automation to DAG Factory YAML compiler.",
+    help="ESP Workload Automation to native Airflow 3 DAG and DAG Factory YAML compiler.",
     no_args_is_help=True,
     add_completion=False,
 )
@@ -133,6 +133,7 @@ def _run_pipeline(
     limit: int = 0,
     profile: str = "default",
     emit_yaml: bool = False,
+    emit_airflow: bool = False,
     emit_graph: bool = False,
     emit_reports: bool = False,
     graph_formats: list[GraphFormat] | None = None,
@@ -145,7 +146,7 @@ def _run_pipeline(
         output_dir=output,
         options=CompilerConfig(
             emit_yaml=emit_yaml,
-            emit_airflow=False,
+            emit_airflow=emit_airflow,
             emit_graph=emit_graph,
             emit_reports=emit_reports,
             graph_formats=formats,
@@ -156,11 +157,12 @@ def _run_pipeline(
     result = build_pipeline(profile=profile).run(request)
 
     yaml_n = sum(1 for a in result.artifacts if a.kind.value == "yaml")
+    dag_n = sum(1 for a in result.artifacts if a.kind.value == "airflow_dag")
     graph_n = sum(1 for a in result.artifacts if a.kind.value == "graph")
     report_n = sum(1 for a in result.artifacts if a.kind.value == "report")
     console.print(
         f"Workflows: {len(result.workflows)} | Failures: {len(result.failures)} | "
-        f"YAML: {yaml_n} | Graphs: {graph_n} | Reports: {report_n}"
+        f"Python DAGs: {dag_n} | YAML: {yaml_n} | Graphs: {graph_n} | Reports: {report_n}"
     )
     for artifact in result.artifacts:
         if artifact.path is not None:
@@ -579,7 +581,7 @@ def compile_cmd(
     limit: int = typer.Option(0, "--limit", "-n", help="Max apps (0=all)."),
     profile: str = typer.Option("default", "--profile", help="YAML profile: default|astronomer"),
 ) -> None:
-    """Full compile: YAML + graphs + reports (Airflow .py deferred)."""
+    """Full compile: native Airflow DAGs + YAML + graphs + reports."""
     _run_pipeline(
         schedule,
         events,
@@ -587,6 +589,7 @@ def compile_cmd(
         limit=limit,
         profile=profile,
         emit_yaml=True,
+        emit_airflow=True,
         emit_graph=True,
         emit_reports=True,
         graph_formats=[GraphFormat.MERMAID, GraphFormat.JSON],
@@ -619,10 +622,16 @@ def dag_cmd(
     schedule: Path = typer.Argument(..., exists=True, readable=True),
     events: Optional[Path] = typer.Argument(None, exists=True, readable=True),
     output: Path = typer.Option(Path("out"), "--output", "-o"),
+    limit: int = typer.Option(0, "--limit", "-n", help="Max apps (0=all)."),
 ) -> None:
-    """Optional Airflow DAG Python generation (deferred — YAML is the deliverable)."""
-    _ = (schedule, events, output)
-    _not_ready("dag")
+    """Generate native Apache Airflow 3 Python DAG modules."""
+    _run_pipeline(
+        schedule,
+        events,
+        output,
+        limit=limit,
+        emit_airflow=True,
+    )
 
 
 @app.command("graph")

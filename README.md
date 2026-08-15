@@ -1,10 +1,10 @@
-# ESP Schedules → DAG Factory YAML (`esp2dag`)
+# ESP Schedules → Airflow 3 Python DAGs (`esp2dag`)
 
-**CA ESP / Broadcom ESP Workload Automation → Apache Airflow DAG Factory YAML converter**
+**CA ESP / Broadcom ESP Workload Automation → native Apache Airflow 3 DAGs, with DAG Factory YAML as an optional artifact**
 
-Migrate legacy **ESP** (CA Workload Automation ESP Edition) applications and events into **DAG Factory**-compatible YAML for **Apache Airflow 2/3**.
+Migrate legacy **ESP** applications and events into native **Apache Airflow 3 Python DAG modules**. DAG Factory-compatible YAML remains available when it suits your deployment.
 
-> Looking for ESP → Airflow, Cybermation → DAG Factory, mainframe scheduler modernization, or a similar converter for **Control-M, IBM TWS, Tidal, etc.? See [Contact](#contact--commercial-licensing) below.
+> Looking for ESP → Airflow, Cybermation → DAG Factory, mainframe scheduler modernization, AS400 / WinRM / SAP job mapping, or a similar converter for **Control-M, IBM TWS, Automic, Tidal, Dollar Universe, Stonebranch, Autosys**, etc.? See [Contact](#contact--commercial-licensing) below.
 
 ---
 
@@ -18,21 +18,22 @@ Enterprise batch estates on **ESP** often contain thousands of applications (`AP
 ESP schedule + events
   → extract → lex → parse → semantic analysis
   → workflow IR → event merge → NOTWITH pools
-  → DAG Factory YAML (+ optional graphs & migration reports)
+  → native Airflow 3 Python DAGs (+ optional DAG Factory YAML, graphs, and reports)
 ```
 
 ## Features
 
-- **DAG Factory YAML** ready for Airflow (operators, dependencies, schedules)
-- Job-type mapping: WinRM, SSH, AS400, SAP RFC, mainframe submit, sensors, EmptyOperator
-- Dependencies from ESP **`RELEASE ADD`** and **`AFTER ADD`**
-- **EXTERNAL** → `ExternalTaskSensor` · **LINK** → `EmptyOperator`
-- **NOTWITH** → shared Airflow **exclusion pools** (cross-DAG safe)
-- Event merge for cron-like schedules from ESP `SCHEDULE` times
-- Graphs (Mermaid / JSON / DOT) and migration reports
-- Sample **anonymized** schedule + events included for demos
+- **Native Airflow 3 Python DAGs** as the primary deliverable
+- **DAG Factory YAML** as an optional secondary artifact
+- **Heterogeneous Job Types**: WinRM, SSH, AS400 / IBM i, SAP RFC, mainframe submit, sensors, EmptyOperator
+- **Dependencies**: Full resolution from ESP **`RELEASE ADD`** and **`AFTER ADD`**
+- **EXTERNAL & LINK**: `EXTERNAL` → `ExternalTaskSensor` · `LINK` → `EmptyOperator`
+- **NOTWITH Exclusions**: Cross-DAG safe Airflow concurrency pools (`slots = 1`)
+- **Event Merging**: Cron-like schedules extracted from ESP `SCHEDULE` / `EVENT` triggers
+- **Visual Graphs & Reports**: Mermaid, Graphviz DOT, JSON graphs, and migration statistics
+- **Curated Multi-Tier Samples**: 5 levels of realistic batch scenarios included for testing and evaluation
 
-## Quick start
+## Quick Start
 
 ### Requirements
 
@@ -44,66 +45,71 @@ ESP schedule + events
 ```bash
 git clone https://github.com/amirsohelprowork-netizen/ESP_schedules_to_dagfactory.git
 cd ESP_schedules_to_dagfactory
+
+# Option A: With pip (editable mode)
+pip install -e .
+
+# Option B: With Poetry
 poetry install
-# or: pip install -e .
 ```
 
-### Convert (smallest demo)
+### Convert (Level 1: Basic Mainframe Batch Demo)
 
 ```bash
-python -m esp2dag yaml data/samples/demo_app.esp data/samples/demo_events.esp -o out/demo
+python -m esp2dag dag data/samples/01_basic_batch.esp data/samples/01_basic_events.esp -o out/basic
 ```
 
-YAML lands in `out/demo/yaml/`.
+Python DAG modules land in `out/basic/dags/`.
 
-### Convert the full anonymized estate
+### Convert Multi-Platform Batch (WinRM, SSH, AS400, AIX)
 
 ```bash
-python -m esp2dag yaml data/anonymized/schedule.esp data/anonymized/events.esp -o out/yaml_full
+python -m esp2dag dag data/samples/02_multi_platform.esp data/samples/02_multi_platform_events.esp -o out/multi_platform
 ```
 
-### Full compile (YAML + graphs + reports)
+### Full Compile (Python DAGs + DAG Factory YAML + Graphs + Reports)
 
 ```bash
-python -m esp2dag compile data/anonymized/schedule.esp data/anonymized/events.esp -o out/full
+python -m esp2dag compile data/samples/05_enterprise_production.esp data/samples/05_enterprise_events.esp -o out/enterprise
 ```
 
-See **[docs/USAGE.md](docs/USAGE.md)** for all CLI commands and output layout.
+See **[docs/USAGE.md](docs/USAGE.md)** for all CLI commands, options, and output layout.
 
-## Example output shape
+## Example Output Shape
 
-```yaml
-my_app:
-  description: MY_APP application
-  schedule: 0 11,19 * * *
-  catchup: false
-  default_args:
-    owner: batchuser
-    start_date: "2024-01-01"
-  tasks:
-    wait_upstream:
-      operator: airflow.sensors.external_task.ExternalTaskSensor
-      external_dag_id: other_app
-      external_task_id: LIE.UPSTREAM
-      mode: reschedule
-    run_windows:
-      operator: airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator
-      ssh_conn_id: AGENT01
-      command: D:\SCRIPTS\JOB.bat
-      pool: nw_0001
-      dependencies:
-        - wait_upstream
+```python
+# Generated by esp2dag for application ACCT_DAILY_BATCH
+from datetime import datetime, timezone
+from airflow.sdk import DAG
+from airflow.providers.standard.operators.bash import BashOperator
+
+with DAG(
+    dag_id="acct_daily_batch",
+    description="Daily account processing pipeline",
+    schedule="0 22 * * *",
+    start_date=datetime(2026, 1, 1, tzinfo=timezone.utc),
+    catchup=False,
+    tags=["esp", "acct_daily_batch"],
+) as dag:
+    extract_transactions = BashOperator(
+        task_id="extract_transactions",
+        bash_command="submit_jcl --jcl-lib 'PROD.BANKING.JCLLIB' --job EXTRACT_TRANSACTIONS",
+    )
+    validate_data = BashOperator(
+        task_id="validate_data",
+        bash_command="submit_jcl --jcl-lib 'PROD.BANKING.JCLLIB' --job VALIDATE_DATA",
+    )
+    extract_transactions >> validate_data
 ```
 
-## Repository layout
+## Repository Layout
 
 ```text
-src/esp2dag/          # Compiler package (CLI + pipeline)
-data/anonymized/      # Redacted full schedule + events (demo input)
-data/samples/         # Tiny fixtures
-scripts/              # Maintainer helpers (keyword-safe re-anonymize)
-docs/                 # Architecture + usage
-tests/                # Unit + golden tests
+src/esp2dag/          # Compiler package (CLI + pipeline + generators)
+data/samples/         # 5-level curated ESP test fixtures & datasets
+scripts/              # Maintainer & visualization helpers (e.g., HTML graph viewer)
+docs/                 # Architecture + usage + pipeline guides
+tests/                # Unit, golden, and integration tests
 LICENSE               # Source-available, non-commercial without permission
 ```
 
@@ -111,17 +117,17 @@ LICENSE               # Source-available, non-commercial without permission
 
 | Doc | Contents |
 |-----|----------|
-| [docs/USAGE.md](docs/USAGE.md) | Install, CLI, inputs, outputs |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Compiler stages |
-| [docs/PIPELINE.md](docs/PIPELINE.md) | Stage contracts |
-| [docs/WORKFLOW_MODEL.md](docs/WORKFLOW_MODEL.md) | Intermediate representation |
+| [docs/USAGE.md](docs/USAGE.md) | Install, CLI commands, sample datasets, outputs |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Compiler design, stages, error handling, determinism |
+| [docs/PIPELINE.md](docs/PIPELINE.md) | Stage contracts and data flow |
+| [docs/WORKFLOW_MODEL.md](docs/WORKFLOW_MODEL.md) | Intermediate representation (IR) reference |
 | [LICENSE](LICENSE) | License & commercial terms |
 
 ## Keywords (discoverability)
 
 `ESP`, `CA ESP`, `Broadcom ESP`, `Workload Automation`, `Cybermation`, `Apache Airflow`, `Airflow 3`, `DAG Factory`, `dag-factory`, `scheduler migration`, `mainframe batch`, `AS400`, `IBM i`, `WinRM`, `SSHOperator`, `SAP job`, `ExternalTaskSensor`, `NOTWITH`, `ESP to Airflow`, `legacy scheduler modernization`
 
-## Contact / commercial licensing
+## Contact / Commercial Licensing
 
 This project is **public for learning and evaluation**.  
 **Commercial use is not free** — contact before production or paid use.

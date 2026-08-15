@@ -1,0 +1,240 @@
+/* ================================================================== */
+/* LEVEL 3: CROSS-APPLICATION DEPENDENCIES & TRIGGERS                  */
+/* Patterns from: Cookbook p.41-48, 55, 64-68, 77                      */
+/*                Reference §EXTERNAL, §LINK, §DSTRIG, §NOTWITH,      */
+/*                §RELEASE, §AFTER, §RESOURCE, §NOTIFY                 */
+/*                                                                     */
+/* Scenario: Pharmaceutical company's nightly batch estate.            */
+/*   - DRUG_INVENTORY: Mainframe inventory with dataset triggers       */
+/*   - CLINICAL_TRIALS_ETL: Depends on DRUG_INVENTORY completing       */
+/*   - REGULATORY_REPORTING: Mutual exclusion with DRUG_INVENTORY      */
+/*   - SUPPLY_CHAIN: Complex dependency chain with LINK markers        */
+/*   - ORDER_FULFILLMENT: Resource-constrained with NOTIFY on failure  */
+/* ================================================================== */
+
+/* ------------------------------------------------------------------ */
+/* APPLICATION 1: Drug Inventory Processing (Mainframe)                */
+/* Dataset trigger waits for inventory feed file, then processes.      */
+/* Demonstrates: DSTRIG (dataset trigger), RELEASE, LINK markers,     */
+/*               NOTIFY on ABEND                                       */
+/* Ref: Cookbook p.45-46 (file waits), p.67 (dataset/time/weekday),     */
+/*      Reference §DSTRIG p.2643                                       */
+/* ------------------------------------------------------------------ */
+APPL DRUG_INVENTORY
+JCLLIB 'PROD.PHARMA.JCLLIB'
+
+/* Dataset trigger: wait for inventory feed from warehouse system */
+DSTRIG WAIT_INVENTORY_FEED
+  DSNAME 'PHARMA.INVENTORY.DAILY.FEED'
+  RUN DAILY
+  RELEASE VALIDATE_INVENTORY
+ENDJOB
+
+JOB VALIDATE_INVENTORY
+  RUN DAILY
+  CCCHK (0,4)
+  RELEASE UPDATE_STOCK_LEVELS
+  RELEASE FLAG_EXPIRING_DRUGS
+  NOTIFY ABEND USERS(ONCALL_PHARMA)
+ENDJOB
+
+JOB UPDATE_STOCK_LEVELS
+  RUN DAILY
+  RELEASE INVENTORY_COMPLETE
+ENDJOB
+
+JOB FLAG_EXPIRING_DRUGS
+  RUN DAILY
+  RELEASE INVENTORY_COMPLETE
+ENDJOB
+
+/* LINK marker: signals downstream applications that inventory is done */
+JOB INVENTORY_COMPLETE LINK
+  RUN DAILY
+  AFTER UPDATE_STOCK_LEVELS
+  AFTER FLAG_EXPIRING_DRUGS
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APPLICATION 2: Clinical Trials ETL                                  */
+/* EXTERNAL wait: must wait for DRUG_INVENTORY to complete before      */
+/* extracting trial data (needs current stock levels).                  */
+/* Demonstrates: EXTERNAL (cross-app dependency),                      */
+/*               ExternalTaskSensor mapping                             */
+/* Ref: Cookbook p.46 (ensuring prerequisite), p.48 (bypassing),        */
+/*      Reference §EXTERNAL                                             */
+/* ------------------------------------------------------------------ */
+APPL CLINICAL_TRIALS_ETL
+JCLLIB 'PROD.CLINICAL.JCLLIB'
+
+/* Wait for DRUG_INVENTORY application to reach INVENTORY_COMPLETE */
+JOB WAIT_INVENTORY EXTERNAL APPLID(DRUG_INVENTORY)
+  RUN DAILY
+  RELEASE EXTRACT_TRIAL_DATA
+ENDJOB
+
+LINUX_JOB EXTRACT_TRIAL_DATA
+  AGENT LNX_CLINICAL_01
+  USER clinical_svc
+  SCRIPTNAME '/opt/clinical/scripts/extract_trials.sh'
+  RUN DAILY
+  RELEASE ANALYZE_EFFICACY
+  RELEASE ANALYZE_SAFETY
+ENDJOB
+
+LINUX_JOB ANALYZE_EFFICACY
+  AGENT LNX_CLINICAL_01
+  USER clinical_svc
+  SCRIPTNAME '/opt/clinical/scripts/efficacy_analysis.py'
+  RUN DAILY
+  RELEASE TRIAL_REPORT
+ENDJOB
+
+LINUX_JOB ANALYZE_SAFETY
+  AGENT LNX_CLINICAL_02
+  USER clinical_svc
+  SCRIPTNAME '/opt/clinical/scripts/safety_analysis.py'
+  RUN DAILY
+  RELEASE TRIAL_REPORT
+ENDJOB
+
+LINUX_JOB TRIAL_REPORT
+  AGENT LNX_CLINICAL_01
+  USER clinical_svc
+  SCRIPTNAME '/opt/clinical/scripts/generate_report.sh'
+  RUN DAILY
+  AFTER ANALYZE_EFFICACY
+  AFTER ANALYZE_SAFETY
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APPLICATION 3: Regulatory Reporting                                  */
+/* NOTWITH: Must NOT run at the same time as DRUG_INVENTORY            */
+/* (both update the same regulatory compliance database).               */
+/* Demonstrates: NOTWITH mutual exclusion, maps to Airflow pools       */
+/* Ref: Reference §NOTWITH p.2821-2823, Cookbook p.64                   */
+/* ------------------------------------------------------------------ */
+APPL REGULATORY_REPORTING
+JCLLIB 'PROD.REGULATORY.JCLLIB'
+
+JOB EXTRACT_COMPLIANCE_DATA
+  RUN WEEKDAYS
+  NOTWITH VALIDATE_INVENTORY/DRUG_INVENTORY
+  RELEASE BUILD_FDA_REPORT
+  RELEASE BUILD_EMA_REPORT
+ENDJOB
+
+JOB BUILD_FDA_REPORT
+  RUN WEEKDAYS
+  RELEASE SUBMIT_REGULATORY
+ENDJOB
+
+JOB BUILD_EMA_REPORT
+  RUN WEEKDAYS
+  RELEASE SUBMIT_REGULATORY
+ENDJOB
+
+JOB SUBMIT_REGULATORY
+  RUN WEEKDAYS
+  AFTER BUILD_FDA_REPORT
+  AFTER BUILD_EMA_REPORT
+  NOTIFY JOBEND USERS(REGULATORY_TEAM)
+  NOTIFY ABEND USERS(ONCALL_PHARMA,REGULATORY_TEAM)
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APPLICATION 4: Supply Chain Management                               */
+/* Complex dependency chain with LINK markers used as synchronization  */
+/* points. Multiple EXTERNAL waits for upstream applications.           */
+/* Demonstrates: Multiple EXTERNALs, multiple LINKs, deep chains       */
+/* Ref: Cookbook p.65 (running/completing based on predecessor order),   */
+/*      Cookbook p.89 (bypassing across multiple applications)           */
+/* ------------------------------------------------------------------ */
+APPL SUPPLY_CHAIN
+JCLLIB 'PROD.SUPPLY.JCLLIB'
+
+/* Sync point: wait for inventory to be current */
+JOB WAIT_INV_DONE EXTERNAL APPLID(DRUG_INVENTORY)
+  RUN DAILY
+  RELEASE FORECAST_DEMAND
+ENDJOB
+
+JOB FORECAST_DEMAND
+  RUN DAILY
+  RELEASE PLAN_PROCUREMENT
+  RELEASE PLAN_DISTRIBUTION
+ENDJOB
+
+JOB PLAN_PROCUREMENT
+  RUN DAILY
+  RELEASE PROCUREMENT_READY
+ENDJOB
+
+JOB PLAN_DISTRIBUTION
+  RUN DAILY
+  RELEASE DISTRIBUTION_READY
+ENDJOB
+
+/* LINK sync point: both procurement and distribution plans ready */
+JOB PROCUREMENT_READY LINK
+  RUN DAILY
+ENDJOB
+
+JOB DISTRIBUTION_READY LINK
+  RUN DAILY
+ENDJOB
+
+JOB EXECUTE_ORDERS
+  RUN DAILY
+  AFTER PROCUREMENT_READY
+  AFTER DISTRIBUTION_READY
+  RELEASE SUPPLY_CHAIN_DONE
+ENDJOB
+
+/* Final LINK marker for downstream consumers */
+JOB SUPPLY_CHAIN_DONE LINK
+  RUN DAILY
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APPLICATION 5: Order Fulfillment with Resource Constraints           */
+/* RESOURCE: Only 1 unit of the SHIPPING_DOCK resource is available,   */
+/* so only one fulfillment job can use the dock at a time.              */
+/* Demonstrates: RESOURCE, NOTWITH between jobs in same app,            */
+/*               NOTIFY LATEPRED, NOTIFY ABEND                         */
+/* Ref: Cookbook p.64 (resource availability), p.82-84 (notifications)  */
+/* ------------------------------------------------------------------ */
+APPL ORDER_FULFILLMENT
+JCLLIB 'PROD.ORDERS.JCLLIB'
+
+JOB PICK_ORDERS
+  RUN DAILY
+  RELEASE PACK_ORDERS_ZONE_A
+  RELEASE PACK_ORDERS_ZONE_B
+  NOTIFY ABEND USERS(WAREHOUSE_OPS)
+ENDJOB
+
+/* These two NOTWITH each other: only one zone packs at a time */
+JOB PACK_ORDERS_ZONE_A
+  RUN DAILY
+  NOTWITH PACK_ORDERS_ZONE_B
+  RELEASE SHIP_ORDERS
+ENDJOB
+
+JOB PACK_ORDERS_ZONE_B
+  RUN DAILY
+  NOTWITH PACK_ORDERS_ZONE_A
+  RELEASE SHIP_ORDERS
+ENDJOB
+
+JOB SHIP_ORDERS
+  RUN DAILY
+  AFTER PACK_ORDERS_ZONE_A
+  AFTER PACK_ORDERS_ZONE_B
+  NOTIFY JOBEND USERS(LOGISTICS_TEAM)
+  NOTIFY ABEND USERS(WAREHOUSE_OPS,LOGISTICS_TEAM)
+ENDJOB

@@ -1,117 +1,155 @@
-# Usage guide
+# Usage Guide
 
-## Install
+## Installation
+
+### Option A: Standard Pip (Editable Mode)
 
 ```bash
 git clone https://github.com/amirsohelprowork-netizen/ESP_schedules_to_dagfactory.git
 cd ESP_schedules_to_dagfactory
-poetry install
-poetry run esp2dag --help
-```
-
-Without Poetry:
-
-```bash
 pip install -e .
 python -m esp2dag --help
 ```
 
-## Inputs
-
-| Path | Description |
-|------|-------------|
-| `data/samples/demo_app.esp` | Small demo application |
-| `data/samples/demo_events.esp` | Matching events |
-| `data/anonymized/schedule.esp` | Full anonymized ESP schedule |
-| `data/anonymized/events.esp` | Full anonymized ESP events |
-
-Use your own `.esp` / schedule extract + events file the same way (paths as arguments).
-
-## Commands
-
-### YAML only (most common)
+### Option B: With Poetry
 
 ```bash
-python -m esp2dag yaml <schedule> [events] -o out/yaml_full
+poetry install
+poetry run esp2dag --help
 ```
 
-Example:
+---
+
+## Included Sample Estates
+
+The repository includes 5 curated, synthetic ESP datasets in `data/samples/` representing different batch patterns:
+
+| Level | Schedule File | Events File | Highlights |
+|:---|:---|:---|:---|
+| **Level 1: Basic Batch** | `data/samples/01_basic_batch.esp` | `data/samples/01_basic_events.esp` | Mainframe JCL, `RUN DAILY`, sequential chains, parallel fan-out/fan-in, `CCCHK` |
+| **Level 2: Multi-Platform** | `data/samples/02_multi_platform.esp` | `data/samples/02_multi_platform_events.esp` | `NT_JOB` (WinRM), `LINUX_JOB` / `UNIX_JOB` (SSH), `AS400_JOB`, `AIX_JOB` |
+| **Level 3: Dependencies & Triggers** | `data/samples/03_dependencies_and_triggers.esp` | `data/samples/03_trigger_events.esp` | `DSTRIG` dataset triggers, `EXTERNAL` waits (`ExternalTaskSensor`), `LINK` tasks, `NOTWITH` exclusion pools |
+| **Level 4: Advanced Scheduling** | `data/samples/04_advanced_scheduling.esp` | `data/samples/04_scheduling_events.esp` | `GENTIME`, `IFHOLIDAYPLUS`, bi-weekly schedules, cyclic execution |
+| **Level 5: Enterprise Production** | `data/samples/05_enterprise_production.esp` | `data/samples/05_enterprise_events.esp` | Full 11-application enterprise estate (>70 tasks) with end-to-end features |
+
+You can also pass your own proprietary `.esp` schedule extracts and events files as arguments.
+
+---
+
+## CLI Commands
+
+### 1. Generate Native Airflow 3 Python DAGs (`dag`)
+
+Emits standalone, runnable Python DAG modules using Airflow 3 `airflow.sdk.DAG`:
 
 ```bash
-python -m esp2dag yaml data/anonymized/schedule.esp data/anonymized/events.esp -o out/yaml_full
+python -m esp2dag dag data/samples/01_basic_batch.esp data/samples/01_basic_events.esp -o out/basic
 ```
 
-### Full compile (YAML + graphs + reports)
+Output:
+```text
+out/basic/
+  dags/
+    acct_daily_batch.py
+    gl_posting.py
+    report_distribution.py
+```
+
+### 2. Full Compilation (`compile`)
+
+Emits native Python DAGs, DAG Factory YAML, visual workflow graphs (Mermaid & JSON), and migration/validation reports in a single pass:
 
 ```bash
-python -m esp2dag compile data/anonymized/schedule.esp data/anonymized/events.esp -o out/full
+python -m esp2dag compile data/samples/05_enterprise_production.esp data/samples/05_enterprise_events.esp -o out/enterprise
 ```
 
-### Graphs only
+### 3. Generate DAG Factory YAML (`yaml`)
+
+Emits DAG Factory-compatible YAML definitions (one YAML per ESP application):
 
 ```bash
-python -m esp2dag graph data/samples/demo_app.esp -o out/graphs --format mermaid,json,graphviz
+python -m esp2dag yaml data/samples/02_multi_platform.esp data/samples/02_multi_platform_events.esp -o out/yaml_multi
 ```
 
-### Reports only
+Astronomer profile format (list of `dependencies`):
 
 ```bash
-python -m esp2dag report data/anonymized/schedule.esp data/anonymized/events.esp -o out/reports
+python -m esp2dag yaml data/samples/01_basic_batch.esp -o out/yaml_astro --profile astronomer
 ```
 
-### Limit apps (smoke test)
+### 4. Generate Workflow Graphs Only (`graph`)
+
+Exports dependency diagrams in Mermaid (`.mmd`), Graphviz DOT (`.dot`), and JSON graph structures:
 
 ```bash
-python -m esp2dag yaml data/anonymized/schedule.esp data/anonymized/events.esp -o out/smoke -n 5
+python -m esp2dag graph data/samples/03_dependencies_and_triggers.esp -o out/graphs --format mermaid,json,graphviz
 ```
 
-### Extract applications from a multi-app schedule
+### 5. Generate Migration Reports Only (`report`)
+
+Generates markdown and JSON audit reports summarizing task types, connections, exclusion pools, unsupported constructs, and validation warnings:
 
 ```bash
-python -m esp2dag extract data/anonymized/schedule.esp -o out/extract
+python -m esp2dag report data/samples/05_enterprise_production.esp data/samples/05_enterprise_events.esp -o out/reports
 ```
 
-## Output layout
+### 6. Extract Applications (`extract`)
+
+Splits a monolithic multi-application schedule into individual application text files:
+
+```bash
+python -m esp2dag extract data/samples/05_enterprise_production.esp -o out/extracted_apps
+```
+
+---
+
+## Interactive HTML Graph Visualizer
+
+To visualize all compiled workflow graphs in an interactive browser UI with zoom, pan, and search:
+
+```bash
+python scripts/generate_html_visualizer.py
+```
+
+Open `out/graph_viewer.html` in your browser.
+
+---
+
+## Output Layout
 
 ```text
 out/<run>/
+  dags/*.py            # Native Apache Airflow 3 modules (one app per file)
   yaml/*.yaml          # DAG Factory documents (one file per application)
-  graphs/*.mmd         # Mermaid (if compile/graph)
-  graphs/*.json
-  reports/             # statistics, validation, migration, dependencies
+  graphs/*.mmd         # Mermaid diagrams
+  graphs/*.json        # Structured JSON graphs
+  reports/             # statistics.md, validation.md, migration.md, dependency.md
 ```
 
-## Dependencies → graph / YAML edges
+---
 
-| ESP statement | Airflow edge |
-|---------------|--------------|
-| `RELEASE ADD(B)` inside job `A` | `A → B` |
-| `AFTER ADD(A)` inside job `B` | `A → B` |
+## Dependencies & Graph Mapping
 
-Graphs (`*.mmd`) and YAML `dependencies:` are built from both forms.
+| ESP Statement | Airflow Dependency |
+|:---|:---|
+| `RELEASE ADD(B)` inside job `A` | `A >> B` |
+| `AFTER ADD(A)` inside job `B` | `A >> B` |
+| `EXTERNAL APP.JOB` | Upstream `ExternalTaskSensor` |
+| `NOTWITH (JOB_B)` | Concurrency pool (`slots = 1`) |
 
-## Airflow notes
+---
 
-1. Load YAML with [DAG Factory](https://github.com/astronomer/dag-factory) (or your org’s loader).
-2. Create Airflow connections matching `conn_id` / `ssh_conn_id` values (WinRM uses `ssh_conn_id` with the provider).
-3. Create pools named `nw_XXXX` with **slots = 1** for ESP `NOTWITH` exclusion groups.
-4. Custom operators (`AS400Operator`, `MainframeSubmitJobOperator`, …) must exist in your Airflow image.
+## Running Tests
 
-## Tests
+Run the complete test suite (unit tests, golden AST/YAML/DAG tests, and integration suites):
 
 ```bash
-poetry run pytest -m "not slow"
+python -m pytest
 ```
 
-## Maintainer: rebuild anonymized inputs
+---
 
-Private raw extracts stay in `data/not_atonymized/` (gitignored). To regenerate public samples **without renaming ESP keywords** (`RELEASE`, `AFTER`, `VARIANT`, …):
+## License & Commercial Use
 
-```bash
-python scripts/rebuild_anonymized.py
-```
-
-## License / commercial use
-
-Public evaluation is welcome. **Commercial / production use requires permission.**  
+Public evaluation and learning are welcome. **Commercial and production use requires permission.**  
 See [LICENSE](../LICENSE) and contact **amirsohelprowork@gmail.com**.

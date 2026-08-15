@@ -1,0 +1,215 @@
+/* ================================================================== */
+/* LEVEL 2: MULTI-PLATFORM / DISTRIBUTED JOBS                         */
+/* Patterns from: Reference §NT_JOB, §UNIX_JOB, §LINUX_JOB,          */
+/*                §AS400_JOB, §AIX_JOB, Cookbook p.69-73               */
+/*                                                                     */
+/* Scenario: Global insurance company with mixed infrastructure.       */
+/*   - CLAIMS_WINDOWS: Windows agent jobs for .NET claims processing   */
+/*   - DATA_WAREHOUSE_ETL: Linux/UNIX ETL pipeline on Hadoop cluster   */
+/*   - LEGACY_POLICY_AS400: IBM iSeries policy administration          */
+/*   - RISK_ENGINE_AIX: AIX-based risk calculation engine               */
+/* ================================================================== */
+
+/* ------------------------------------------------------------------ */
+/* APPLICATION 1: Windows Claims Processing                            */
+/* NT_JOB jobs running on Windows agents via WinRM.                    */
+/* Demonstrates: NT_JOB, AGENT, USER, CMDNAME, RELEASE chains         */
+/* Ref: ESP-12.0 §NT_JOB p.2825, Cookbook p.73                         */
+/* ------------------------------------------------------------------ */
+APPL CLAIMS_WINDOWS
+JCLLIB 'PROD.CLAIMS.JCLLIB'
+
+NT_JOB CLAIMS_INTAKE
+  AGENT WIN_CLAIMS_01
+  USER 'INSURDOM\svc_claims'
+  CMDNAME 'D:\ClaimsApp\bin\intake_processor.bat'
+  RUN DAILY
+  RELEASE CLAIMS_VALIDATE
+ENDJOB
+
+NT_JOB CLAIMS_VALIDATE
+  AGENT WIN_CLAIMS_01
+  USER 'INSURDOM\svc_claims'
+  CMDNAME 'D:\ClaimsApp\bin\validate_claims.exe'
+  RUN DAILY
+  RELEASE CLAIMS_ADJUDICATE
+  RELEASE CLAIMS_FRAUD_CHECK
+ENDJOB
+
+NT_JOB CLAIMS_ADJUDICATE
+  AGENT WIN_CLAIMS_02
+  USER 'INSURDOM\svc_claims'
+  CMDNAME 'D:\ClaimsApp\bin\adjudicate.bat'
+  RUN DAILY
+  RELEASE CLAIMS_PAYMENT
+ENDJOB
+
+NT_JOB CLAIMS_FRAUD_CHECK
+  AGENT WIN_CLAIMS_02
+  USER 'INSURDOM\svc_fraud'
+  CMDNAME 'D:\FraudDetection\run_check.ps1'
+  RUN DAILY
+  RELEASE CLAIMS_PAYMENT
+ENDJOB
+
+NT_JOB CLAIMS_PAYMENT
+  AGENT WIN_CLAIMS_01
+  USER 'INSURDOM\svc_payments'
+  CMDNAME 'D:\PaymentGateway\process_payments.bat'
+  RUN DAILY
+  AFTER CLAIMS_ADJUDICATE
+  AFTER CLAIMS_FRAUD_CHECK
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APPLICATION 2: Data Warehouse ETL on Linux                          */
+/* LINUX_JOB and UNIX_JOB running shell scripts on remote agents.     */
+/* Demonstrates: LINUX_JOB, UNIX_JOB, AGENT, USER, SCRIPTNAME,        */
+/*               CMDNAME, ARGS                                         */
+/* Ref: ESP-12.0 §UNIX_JOB p.3087, §LINUX_JOB p.2784                  */
+/* ------------------------------------------------------------------ */
+APPL DATA_WAREHOUSE_ETL
+JCLLIB 'PROD.DW.JCLLIB'
+
+LINUX_JOB STAGE_RAW_DATA
+  AGENT LNX_ETL_01
+  USER etl_svc
+  SCRIPTNAME '/opt/etl/scripts/stage_raw_data.sh'
+  RUN DAILY
+  RELEASE TRANSFORM_DIMENSIONS
+  RELEASE TRANSFORM_FACTS
+ENDJOB
+
+LINUX_JOB TRANSFORM_DIMENSIONS
+  AGENT LNX_ETL_01
+  USER etl_svc
+  SCRIPTNAME '/opt/etl/scripts/transform_dims.sh'
+  RUN DAILY
+  RELEASE LOAD_WAREHOUSE
+ENDJOB
+
+UNIX_JOB TRANSFORM_FACTS
+  AGENT LNX_ETL_02
+  USER etl_svc
+  SCRIPTNAME '/opt/etl/scripts/transform_facts.sh'
+  RUN DAILY
+  RELEASE LOAD_WAREHOUSE
+ENDJOB
+
+LINUX_JOB LOAD_WAREHOUSE
+  AGENT LNX_ETL_01
+  USER etl_svc
+  SCRIPTNAME '/opt/etl/scripts/load_warehouse.sh'
+  RUN DAILY
+  AFTER TRANSFORM_DIMENSIONS
+  AFTER TRANSFORM_FACTS
+  RELEASE BUILD_CUBES
+ENDJOB
+
+LINUX_JOB BUILD_CUBES
+  AGENT LNX_ETL_02
+  USER etl_svc
+  CMDNAME '/opt/etl/bin/cube_builder'
+  ARGS '--config /opt/etl/conf/cubes.yaml --parallel 8'
+  RUN DAILY
+  RELEASE REFRESH_DASHBOARDS
+ENDJOB
+
+LINUX_JOB REFRESH_DASHBOARDS
+  AGENT LNX_ETL_01
+  USER etl_svc
+  SCRIPTNAME '/opt/etl/scripts/refresh_tableau.sh'
+  RUN DAILY
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APPLICATION 3: IBM iSeries / AS400 Policy Administration            */
+/* AS400_JOB running CL commands and RPG programs on iSeries.          */
+/* Demonstrates: AS400_JOB, AGENT, COMMAND, JOBQ                      */
+/* Ref: ESP-12.0 §AS400_JOB p.2534                                    */
+/* ------------------------------------------------------------------ */
+APPL LEGACY_POLICY_AS400
+JCLLIB 'PROD.AS400.JCLLIB'
+
+AS400_JOB EXTRACT_POLICIES
+  AGENT AS400_PROD_01
+  USER QSECOFR
+  COMMAND 'CALL PGM(POLLIB/POLEXT) PARM(DAILY)'
+  JOBQ QBATCH
+  RUN DAILY
+  RELEASE CALC_PREMIUMS
+ENDJOB
+
+AS400_JOB CALC_PREMIUMS
+  AGENT AS400_PROD_01
+  USER QSECOFR
+  COMMAND 'CALL PGM(POLLIB/PREMCALC)'
+  JOBQ QBATCH
+  RUN DAILY
+  RELEASE GENERATE_NOTICES
+  RELEASE UPDATE_POLICY_DB
+ENDJOB
+
+AS400_JOB UPDATE_POLICY_DB
+  AGENT AS400_PROD_01
+  USER QSECOFR
+  COMMAND 'CALL PGM(POLLIB/POLUPD) PARM(COMMIT)'
+  JOBQ QBATCH
+  RUN DAILY
+ENDJOB
+
+AS400_JOB GENERATE_NOTICES
+  AGENT AS400_PROD_01
+  USER QSECOFR
+  COMMAND 'CALL PGM(POLLIB/NOTICEGEN)'
+  JOBQ QBATCH
+  RUN DAILY
+ENDJOB
+
+
+/* ------------------------------------------------------------------ */
+/* APPLICATION 4: AIX Risk Calculation Engine                          */
+/* AIX_JOB running C++ risk models on IBM POWER systems.               */
+/* Demonstrates: AIX_JOB, AGENT, USER, SCRIPTNAME, CMDNAME            */
+/* Ref: ESP-12.0 §AIX_JOB p.2500                                      */
+/* ------------------------------------------------------------------ */
+APPL RISK_ENGINE_AIX
+JCLLIB 'PROD.RISK.JCLLIB'
+
+AIX_JOB LOAD_MARKET_DATA
+  AGENT AIX_RISK_01
+  USER riskuser
+  SCRIPTNAME '/opt/risk/scripts/load_market_data.ksh'
+  RUN WEEKDAYS
+  RELEASE CALC_VAR
+  RELEASE CALC_CREDIT_RISK
+ENDJOB
+
+AIX_JOB CALC_VAR
+  AGENT AIX_RISK_01
+  USER riskuser
+  CMDNAME '/opt/risk/bin/var_engine'
+  ARGS '--model montecarlo --iterations 100000'
+  RUN WEEKDAYS
+  RELEASE AGGREGATE_RISK
+ENDJOB
+
+AIX_JOB CALC_CREDIT_RISK
+  AGENT AIX_RISK_02
+  USER riskuser
+  CMDNAME '/opt/risk/bin/credit_risk_engine'
+  ARGS '--portfolio ALL --horizon 1Y'
+  RUN WEEKDAYS
+  RELEASE AGGREGATE_RISK
+ENDJOB
+
+AIX_JOB AGGREGATE_RISK
+  AGENT AIX_RISK_01
+  USER riskuser
+  SCRIPTNAME '/opt/risk/scripts/aggregate_reports.ksh'
+  RUN WEEKDAYS
+  AFTER CALC_VAR
+  AFTER CALC_CREDIT_RISK
+ENDJOB

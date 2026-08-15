@@ -1,0 +1,39 @@
+/* ================================================================== */
+/* LEVEL 4: EVENTS for advanced scheduling applications                */
+/* Multiple SCHEDULE times, mixed triggers                              */
+/* ================================================================== */
+
+/* Flight ops: two runs per day (morning prep and evening close) */
+EVENT ID(PROD.FLIGHT_OPS_AM) SYSTEM(ESPM) REPLACE
+SCHEDULE 04.00 DAILY
+INVOKE 'PROD.PROCLIB(FLIGHT_OPS_DAILY)'
+ENDDEF
+
+EVENT ID(PROD.FLIGHT_OPS_PM) SYSTEM(ESPM) REPLACE
+SCHEDULE 22.00 DAILY
+INVOKE 'PROD.PROCLIB(FLIGHT_OPS_DAILY)'
+ENDDEF
+
+/* Revenue close on last workday of month at 18:00 */
+EVENT ID(PROD.REVENUE_CLOSE) SYSTEM(ESPM) REPLACE
+SCHEDULE 18.00 LAST WORKDAY OF MONTH
+INVOKE 'PROD.PROCLIB(REVENUE_MONTHLY)'
+ENDDEF
+
+/* Loyalty processing every other Wednesday at 01:00 */
+EVENT ID(PROD.LOYALTY_RUN) SYSTEM(ESPM) REPLACE
+SCHEDULE 01.00 EVERY 2 WEEKS STARTING JAN 8 2025
+INVOKE 'PROD.PROCLIB(LOYALTY_BIWEEKLY)'
+ENDDEF
+
+/* Maintenance check cycle fires at 06:00 daily */
+EVENT ID(PROD.MAINT_CYCLE) SYSTEM(ESPM) REPLACE
+SCHEDULE 06.00 DAILY
+INVOKE 'PROD.PROCLIB(MAINTENANCE_CYCLIC)'
+ENDDEF
+
+/* Quarterly compliance on 1st workday of quarter at 08:00 */
+EVENT ID(PROD.QUARTERLY_AUDIT) SYSTEM(ESPM) REPLACE
+SCHEDULE 08.00 1ST WORKDAY OF QUARTER
+INVOKE 'PROD.PROCLIB(QUARTERLY_COMPLIANCE)'
+ENDDEF

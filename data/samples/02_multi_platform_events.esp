@@ -1,0 +1,27 @@
+/* ================================================================== */
+/* LEVEL 2: EVENTS for multi-platform applications                    */
+/* ================================================================== */
+
+/* Claims processing starts at 20:00 daily after branch offices close */
+EVENT ID(PROD.CLAIMS_NIGHTLY) SYSTEM(ESPM) REPLACE
+SCHEDULE 20.00 DAILY
+INVOKE 'PROD.PROCLIB(CLAIMS_WINDOWS)'
+ENDDEF
+
+/* ETL runs at 02:00 daily (after source systems close) */
+EVENT ID(PROD.DW_ETL_NIGHTLY) SYSTEM(ESPM) REPLACE
+SCHEDULE 02.00 DAILY
+INVOKE 'PROD.PROCLIB(DATA_WAREHOUSE_ETL)'
+ENDDEF
+
+/* AS400 policy batch at 21:00 */
+EVENT ID(PROD.AS400_POLICY) SYSTEM(ESPM) REPLACE
+SCHEDULE 21.00 DAILY
+INVOKE 'PROD.PROCLIB(LEGACY_POLICY_AS400)'
+ENDDEF
+
+/* Risk engine runs at market close 17:00 weekdays */
+EVENT ID(PROD.RISK_CALC) SYSTEM(ESPM) REPLACE
+SCHEDULE 17.00 WEEKDAYS
+INVOKE 'PROD.PROCLIB(RISK_ENGINE_AIX)'
+ENDDEF

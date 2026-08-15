@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from esp2dag.airflow_generator import AirflowDagGenerator
 from esp2dag.compiler.lexer import EspLexer
 from esp2dag.compiler.parser import EspParser
 from esp2dag.compiler.pipeline import CompilerPipeline
@@ -27,6 +28,7 @@ def build_pipeline(*, profile: str = "default") -> CompilerPipeline:
         event_merger=EspEventMerger(),
         workflow_validator=WorkflowValidator(),
         yaml_generator=DagFactoryYamlGenerator(profile=profile),
+        airflow_generator=AirflowDagGenerator(),
         graph_generator=WorkflowGraphGenerator(),
         report_generator=CompileReportGenerator(),
     )

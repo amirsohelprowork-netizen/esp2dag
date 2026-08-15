@@ -1,0 +1,40 @@
+/* ================================================================== */
+/* LEVEL 3: EVENTS with dataset triggers and cross-app events          */
+/* Ref: Cookbook p.67-68 (data set, time, weekdays combo),              */
+/*      Reference §EVENT p.2679, §DSTRIG p.2643                        */
+/* ================================================================== */
+
+/* Inventory feed file arrives from warehouse management system */
+EVENT ID(PROD.INVENTORY_FEED) SYSTEM(ESPM) REPLACE
+DSTRIG PHARMA.INVENTORY.DAILY.FEED
+INVOKE 'PROD.PROCLIB(DRUG_INVENTORY)'
+ENDDEF
+
+/* Clinical ETL runs after inventory completes, at 01:00 */
+EVENT ID(PROD.CLINICAL_NIGHTLY) SYSTEM(ESPM) REPLACE
+SCHEDULE 01.00 DAILY
+INVOKE 'PROD.PROCLIB(CLINICAL_TRIALS_ETL)'
+ENDDEF
+
+/* Regulatory reports at 06:00 weekdays */
+EVENT ID(PROD.REGULATORY) SYSTEM(ESPM) REPLACE
+SCHEDULE 06.00 WEEKDAYS
+INVOKE 'PROD.PROCLIB(REGULATORY_REPORTING)'
+ENDDEF
+
+/* Supply chain runs at 03:00 after inventory is expected done */
+EVENT ID(PROD.SUPPLY_CHAIN) SYSTEM(ESPM) REPLACE
+SCHEDULE 03.00 DAILY
+INVOKE 'PROD.PROCLIB(SUPPLY_CHAIN)'
+ENDDEF
+
+/* Order fulfillment at 07:00 (warehouse shift start) */
+EVENT ID(PROD.FULFILLMENT) SYSTEM(ESPM) REPLACE
+SCHEDULE 07.00 DAILY
+INVOKE 'PROD.PROCLIB(ORDER_FULFILLMENT)'
+ENDDEF
+
+/* SAP extract file trigger for downstream systems */
+EVENT ID(PROD.SAP_EXTRACT) SYSTEM(ESPM) REPLACE
+DSTRIG SAP.EXTRACT.DAILY.G0001V00
+ENDDEF
