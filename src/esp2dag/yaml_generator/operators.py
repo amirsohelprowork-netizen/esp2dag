@@ -24,10 +24,64 @@ Triggers
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from esp2dag.models.workflow import Task, TaskType
 from esp2dag.utils import sanitize_task_id
+
+# ---------------------------------------------------------------------------
+# ESP Symbolic Variable → Airflow Jinja Template substitution
+# ---------------------------------------------------------------------------
+
+_ESP_VARIABLE_MAP: dict[str, str] = {
+    "%ODATE": "{{ ds }}",
+    "%OYEAR": "{{ logical_date.strftime('%Y') }}",
+    "%OMONTH": "{{ logical_date.strftime('%m') }}",
+    "%ODAY": "{{ logical_date.strftime('%d') }}",
+    "%DATE": "{{ ds_nodash }}",
+    "%TIME": "{{ ts_nodash }}",
+    "%APPL": "{{ dag.dag_id }}",
+    "%APPLICATION": "{{ dag.dag_id }}",
+    "%JOB": "{{ task.task_id }}",
+    "%JOBNAME": "{{ task.task_id }}",
+    "%USER": "{{ params.get('esp_owner', 'maestro') }}",
+    "%SCHEDDATE": "{{ ds }}",
+    "%SCHEDTIME": "{{ logical_date.strftime('%H%M') }}",
+    "%RUN_NUM": "{{ run_id }}",
+}
+
+# Build a single regex that matches any known ESP variable (longest first to
+# handle %APPLICATION before %APPL, etc.).
+_ESP_VAR_RE = re.compile(
+    "|".join(
+        re.escape(var) for var in sorted(_ESP_VARIABLE_MAP, key=len, reverse=True)
+    ),
+    re.IGNORECASE,
+)
+
+
+def substitute_esp_variables(text: str) -> str:
+    """Replace ESP symbolic variables with Airflow Jinja template equivalents.
+
+    Examples:
+        >>> substitute_esp_variables('archive_data.sh %ODATE %APPL')
+        'archive_data.sh {{ ds }} {{ dag.dag_id }}'
+        >>> substitute_esp_variables('no variables here')
+        'no variables here'
+    """
+    if not text or "%" not in text:
+        return text
+
+    def _replace(match: re.Match[str]) -> str:
+        return _ESP_VARIABLE_MAP.get(match.group(0).upper(), match.group(0))
+
+    return _ESP_VAR_RE.sub(_replace, text)
+
+
+# ---------------------------------------------------------------------------
+# Operator constants
+# ---------------------------------------------------------------------------
 
 AS400_OPERATOR = "custom_operators.as400.AS400Operator"
 WINRM_OPERATOR = "airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator"
@@ -140,7 +194,7 @@ def build_task_fields(
 
     if operator == AS400_OPERATOR:
         fields["conn_id"] = f"{agent}_AS400" if agent else "as400_default"
-        fields["command"] = task.command or ""
+        fields["command"] = substitute_esp_variables(task.command or "")
         if jobq:
             fields["job_queue"] = jobq
         if not task.pool and agent:
@@ -151,7 +205,7 @@ def build_task_fields(
         # The provider exposes ``ssh_conn_id`` for its WinRM connection.  It
         # does not accept ``winrm_conn_id``.
         fields["ssh_conn_id"] = agent or "winrm_default"
-        fields["command"] = task.command or ""
+        fields["command"] = substitute_esp_variables(task.command or "")
         return _apply_common_fields(task, fields, retries, review_notes)
 
     if operator == SSH_OPERATOR:
@@ -175,6 +229,8 @@ def build_task_fields(
 
     if operator == MAINFRAME_OPERATOR:
         fields["job_name"] = task.name
+        if task.params.get("jcl_library"):
+            fields["jcl_library"] = _strip_quotes(task.params["jcl_library"])
         if task.params.get("ccchk"):
             fields["ccchk"] = task.params["ccchk"]
         return _apply_common_fields(task, fields, retries, review_notes)
@@ -248,8 +304,10 @@ def _is_task_marker(task: Task) -> bool:
 def _ssh_command(command: str | None, args: str | None) -> str:
     base = (command or "").strip()
     if args and args.strip():
-        return f"{base} {args.strip()}".strip()
-    return base
+        raw = f"{base} {args.strip()}".strip()
+    else:
+        raw = base
+    return substitute_esp_variables(raw)
 
 
 def _strip_quotes(value: str) -> str:

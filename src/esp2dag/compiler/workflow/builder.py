@@ -106,6 +106,23 @@ class EspWorkflowBuilder:
         unsupported.extend(f"unsupported:{u.keyword}" for u in job.unsupported)
 
         params: dict[str, str] = {}
+        # Thread JCLLIB from application-level options into task params.
+        jcllib = next(
+            (m.value for m in ast.metadata if m.key == "appl_option" and m.value
+             and m.value.strip("'\"").endswith("JCLLIB") is False
+             and "JCLLIB" in m.value.upper()
+             ),
+            None,
+        )
+        if jcllib is None:
+            # JCLLIB is typically the first appl_option after APPL name.
+            # It's stored as the raw value, e.g. "'PROD.CORE.JCLLIB'"
+            for m in ast.metadata:
+                if m.key == "appl_option" and m.value and "." in m.value:
+                    jcllib = m.value
+                    break
+        if jcllib:
+            params["jcl_library"] = jcllib
         agent = meta_value(job, "agent")
         if agent:
             params["agent"] = agent

@@ -7,10 +7,11 @@ than importing or parsing ESP at DAG-discovery time.
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 
 from esp2dag.compiler.workflow.notwith import assign_notwith_pools
-from esp2dag.models.workflow import MappingStatus, Task, Workflow
+from esp2dag.models.workflow import MappingStatus, Notification, Task, Workflow
 from esp2dag.utils import sanitize_task_id
 from esp2dag.yaml_generator.operators import (
     AS400_OPERATOR,
@@ -82,7 +83,7 @@ class AirflowDagGenerator:
             "",
             "from __future__ import annotations",
             "",
-            "from datetime import datetime, timezone",
+            "from datetime import datetime, timedelta, timezone",
             "",
             "from airflow.sdk import DAG",
             *imports,
@@ -90,6 +91,11 @@ class AirflowDagGenerator:
         ]
         if any(row["operator"] == PYTHON_OPERATOR for row in task_rows):
             lines.extend(_manual_task_function())
+
+        # Emit NOTIFY callback functions.
+        callback_lines = _render_notify_callbacks(workflow)
+        if callback_lines:
+            lines.extend(callback_lines)
 
         lines.extend(_dag_header(workflow))
         lines.append("    tasks = {}")
@@ -123,6 +129,7 @@ def _manual_task_function() -> list[str]:
 def _dag_header(workflow: Workflow) -> list[str]:
     start_date = _start_date(workflow)
     tags = list(dict.fromkeys(["esp", *workflow.metadata.tags]))
+    default_args = _build_default_args(workflow)
     return [
         "with DAG(",
         f"    dag_id={workflow.id!r},",
@@ -133,7 +140,7 @@ def _dag_header(workflow: Workflow) -> list[str]:
             f"{start_date.year}, {start_date.month}, {start_date.day}, tzinfo=timezone.utc),"
         ),
         "    catchup=False,",
-        f"    default_args={{'owner': {infer_owner(workflow.tasks)!r}}},",
+        f"    default_args={default_args!r},",
         f"    tags={tags!r},",
         ") as dag:",
     ]
