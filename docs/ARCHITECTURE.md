@@ -219,6 +219,7 @@ See `docs/PIPELINE.md` for full I/O contracts.
 | 4 | `SemanticAnalyzer` | `ApplicationNode` | AST + `list[Diagnostic]` |
 | 5 | `WorkflowBuilder` | validated AST | `Workflow` |
 | 6 | `EventParser` + `EventMerger` | events file + `Workflow`s | enriched `Workflow`s |
+| 6.5 | `assign_notwith_pools` | `list[Workflow]` | `list[Workflow]` (with shared pools) |
 | 7 | `DagFactoryYamlGenerator` | `Workflow` | deterministic YAML string/path |
 | 8 | `AirflowDagGenerator` | YAML or `Workflow` | Python DAG module(s) |
 | 9 | `GraphGenerator` | `Workflow` | Mermaid / Graphviz / JSON |

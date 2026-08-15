@@ -43,6 +43,7 @@ Supports `accept(visitor: AstVisitor) -> T`.
 | notifications | `list[NotificationNode]` | App-level |
 | metadata | `list[MetadataNode]` | Free-form ESP attributes |
 | raw_header | `str \| None` | Preserved APPLICATION line |
+| unsupported | `list[UnsupportedStatementNode]` | Parked for diagnostics |
 
 ### `JobNode`
 | Field | Type | Notes |
