@@ -1,0 +1,186 @@
+{
+  "by_code": {
+    "E405": 11,
+    "W300": 5,
+    "W400": 5
+  },
+  "by_severity": {
+    "WARNING": 21
+  },
+  "by_stage": {
+    "parser": 5,
+    "semantic": 16
+  },
+  "diagnostic_samples": [
+    {
+      "application": "FLIGHT_OPS_DAILY",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "FLIGHT_OPS_DAILY",
+      "code": "E405",
+      "job": "WEEKLY_OPS_ANALYSIS",
+      "message": "Job 'WEEKLY_OPS_ANALYSIS' RUN expression 'MONDAY' uses unrecognized schedule token 'MONDAY'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "FLIGHT_OPS_DAILY",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "REVENUE_MONTHLY",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "REVENUE_MONTHLY",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "LOYALTY_BIWEEKLY",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "LOYALTY_BIWEEKLY",
+      "code": "E405",
+      "job": "EXTRACT_MEMBER_ACTIVITY",
+      "message": "Job 'EXTRACT_MEMBER_ACTIVITY' RUN expression 'EVERY 2 WEEKS STARTING JAN 8TH 2025 IFHOLIDAYPLUS 1 DAY' uses unrecognized schedule token 'EVERY'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "LOYALTY_BIWEEKLY",
+      "code": "E405",
+      "job": "CALC_POINTS",
+      "message": "Job 'CALC_POINTS' RUN expression 'EVERY 2 WEEKS STARTING JAN 8TH 2025 IFHOLIDAYPLUS 1 DAY' uses unrecognized schedule token 'EVERY'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "LOYALTY_BIWEEKLY",
+      "code": "E405",
+      "job": "UPDATE_TIER_STATUS",
+      "message": "Job 'UPDATE_TIER_STATUS' RUN expression 'EVERY 2 WEEKS STARTING JAN 8TH 2025 IFHOLIDAYPLUS 1 DAY' uses unrecognized schedule token 'EVERY'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "LOYALTY_BIWEEKLY",
+      "code": "E405",
+      "job": "GENERATE_STATEMENTS",
+      "message": "Job 'GENERATE_STATEMENTS' RUN expression 'EVERY 2 WEEKS STARTING JAN 8TH 2025 IFHOLIDAYPLUS 1 DAY' uses unrecognized schedule token 'EVERY'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "LOYALTY_BIWEEKLY",
+      "code": "E405",
+      "job": "LOYALTY_COMPLETE",
+      "message": "Job 'LOYALTY_COMPLETE' RUN expression 'EVERY 2 WEEKS STARTING JAN 8TH 2025 IFHOLIDAYPLUS 1 DAY' uses unrecognized schedule token 'EVERY'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "LOYALTY_BIWEEKLY",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "MAINTENANCE_CYCLIC",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "MAINTENANCE_CYCLIC",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "QUARTERLY_COMPLIANCE",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "QUARTERLY_COMPLIANCE",
+      "code": "E405",
+      "job": "EXTRACT_QUARTERLY_DATA",
+      "message": "Job 'EXTRACT_QUARTERLY_DATA' RUN expression '1ST WORKDAY OF QUARTER' uses unrecognized schedule token '1ST'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "QUARTERLY_COMPLIANCE",
+      "code": "E405",
+      "job": "STANDARD_AUDIT",
+      "message": "Job 'STANDARD_AUDIT' RUN expression '1ST WORKDAY OF QUARTER' uses unrecognized schedule token '1ST'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "QUARTERLY_COMPLIANCE",
+      "code": "E405",
+      "job": "SAFETY_AUDIT",
+      "message": "Job 'SAFETY_AUDIT' RUN expression '1ST WORKDAY OF QUARTER' uses unrecognized schedule token '1ST'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "QUARTERLY_COMPLIANCE",
+      "code": "E405",
+      "job": "COMPILE_QUARTERLY_REPORT",
+      "message": "Job 'COMPILE_QUARTERLY_REPORT' RUN expression '1ST WORKDAY OF QUARTER' uses unrecognized schedule token '1ST'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "QUARTERLY_COMPLIANCE",
+      "code": "E405",
+      "job": "SUBMIT_TO_FAA",
+      "message": "Job 'SUBMIT_TO_FAA' RUN expression '1ST WORKDAY OF QUARTER' uses unrecognized schedule token '1ST'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "QUARTERLY_COMPLIANCE",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    }
+  ],
+  "failed_units": [],
+  "has_errors": false
+}

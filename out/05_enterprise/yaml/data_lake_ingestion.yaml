@@ -1,0 +1,59 @@
+data_lake_ingestion:
+  description: DATA_LAKE_INGESTION application
+  schedule: 0 1 * * *
+  catchup: false
+  default_args:
+    owner: hadoop_svc
+    start_date: '2024-01-01'
+  tasks:
+    wait_core_for_lake:
+      operator: airflow.providers.standard.sensors.external_task.ExternalTaskSensor
+      external_dag_id: core_banking_eod
+      external_task_id: wait_core_for_lake
+      mode: reschedule
+    wait_trading_for_lake:
+      operator: airflow.providers.standard.sensors.external_task.ExternalTaskSensor
+      external_dag_id: trading_settlement
+      external_task_id: wait_trading_for_lake
+      mode: reschedule
+    dl_wait_sap_extract:
+      operator: custom_operators.mainframe.MainframeDatasetSensor
+      dsname: SAP.EXTRACT.DAILY.FEED
+      mode: reschedule
+      poke_interval: 60
+    dl_ingest_core:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: LNX_HADOOP_01
+      command: /opt/datalake/scripts/ingest_core_banking.sh
+      dependencies:
+      - wait_core_for_lake
+    dl_ingest_trading:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: LNX_HADOOP_01
+      command: /opt/datalake/scripts/ingest_trading.sh
+      dependencies:
+      - wait_trading_for_lake
+    dl_ingest_sap:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: LNX_HADOOP_02
+      command: /opt/datalake/scripts/ingest_sap.sh
+      dependencies:
+      - dl_wait_sap_extract
+    dl_build_unified_view:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: LNX_HADOOP_01
+      command: /opt/spark/bin/spark-submit --master yarn --deploy-mode cluster --class com.bank.UnifiedView /opt/datalake/jars/unified_view.jar
+      dependencies:
+      - dl_ingest_core
+      - dl_ingest_sap
+      - dl_ingest_trading
+    dl_quality_checks:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: LNX_HADOOP_02
+      command: /opt/datalake/scripts/data_quality_checks.py
+      dependencies:
+      - dl_build_unified_view
+    dl_complete:
+      operator: airflow.providers.standard.operators.empty.EmptyOperator
+      dependencies:
+      - dl_quality_checks

@@ -1,0 +1,76 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "ASSIGN_MECHANICS",
+      "kind": "success",
+      "resolved": true,
+      "to": "TRACK_COMPLETION"
+    },
+    {
+      "condition": null,
+      "from": "CHECK_FLEET_STATUS",
+      "kind": "success",
+      "resolved": true,
+      "to": "SCHEDULE_INSPECTIONS"
+    },
+    {
+      "condition": null,
+      "from": "SCHEDULE_INSPECTIONS",
+      "kind": "success",
+      "resolved": true,
+      "to": "ASSIGN_MECHANICS"
+    },
+    {
+      "condition": null,
+      "from": "TRACK_COMPLETION",
+      "kind": "success",
+      "resolved": true,
+      "to": "MAINT_CYCLE_DONE"
+    }
+  ],
+  "name": "MAINTENANCE_CYCLIC",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "CHECK_FLEET_STATUS",
+      "name": "CHECK_FLEET_STATUS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "SCHEDULE_INSPECTIONS",
+      "name": "SCHEDULE_INSPECTIONS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "ASSIGN_MECHANICS",
+      "name": "ASSIGN_MECHANICS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "TRACK_COMPLETION",
+      "name": "TRACK_COMPLETION",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "MAINT_CYCLE_DONE",
+      "name": "MAINT_CYCLE_DONE",
+      "operator": "airflow.providers.standard.operators.empty.EmptyOperator",
+      "task_type": "empty",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "maintenance_cyclic"
+}

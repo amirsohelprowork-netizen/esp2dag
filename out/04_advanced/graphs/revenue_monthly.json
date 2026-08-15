@@ -1,0 +1,83 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "CALC_ACCRUALS",
+      "kind": "success",
+      "resolved": true,
+      "to": "REVENUE_RECONCILIATION"
+    },
+    {
+      "condition": null,
+      "from": "CALC_DEFERRED_REVENUE",
+      "kind": "success",
+      "resolved": true,
+      "to": "REVENUE_RECONCILIATION"
+    },
+    {
+      "condition": null,
+      "from": "CLOSE_REVENUE_PERIOD",
+      "kind": "success",
+      "resolved": true,
+      "to": "CALC_ACCRUALS"
+    },
+    {
+      "condition": null,
+      "from": "CLOSE_REVENUE_PERIOD",
+      "kind": "success",
+      "resolved": true,
+      "to": "CALC_DEFERRED_REVENUE"
+    },
+    {
+      "condition": null,
+      "from": "REVENUE_RECONCILIATION",
+      "kind": "success",
+      "resolved": true,
+      "to": "MANAGEMENT_REPORTING"
+    }
+  ],
+  "name": "REVENUE_MONTHLY",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "CLOSE_REVENUE_PERIOD",
+      "name": "CLOSE_REVENUE_PERIOD",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "CALC_DEFERRED_REVENUE",
+      "name": "CALC_DEFERRED_REVENUE",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "CALC_ACCRUALS",
+      "name": "CALC_ACCRUALS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "REVENUE_RECONCILIATION",
+      "name": "REVENUE_RECONCILIATION",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "MANAGEMENT_REPORTING",
+      "name": "MANAGEMENT_REPORTING",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "revenue_monthly"
+}

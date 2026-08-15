@@ -1,0 +1,46 @@
+supply_chain:
+  description: SUPPLY_CHAIN application
+  schedule: 0 3 * * *
+  catchup: false
+  default_args:
+    owner: maestro
+    start_date: '2024-01-01'
+  tasks:
+    wait_inv_done:
+      operator: airflow.providers.standard.sensors.external_task.ExternalTaskSensor
+      external_dag_id: drug_inventory
+      external_task_id: wait_inv_done
+      mode: reschedule
+    forecast_demand:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: FORECAST_DEMAND
+      dependencies:
+      - wait_inv_done
+    plan_procurement:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: PLAN_PROCUREMENT
+      dependencies:
+      - forecast_demand
+    plan_distribution:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: PLAN_DISTRIBUTION
+      dependencies:
+      - forecast_demand
+    procurement_ready:
+      operator: airflow.providers.standard.operators.empty.EmptyOperator
+      dependencies:
+      - plan_procurement
+    distribution_ready:
+      operator: airflow.providers.standard.operators.empty.EmptyOperator
+      dependencies:
+      - plan_distribution
+    execute_orders:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: EXECUTE_ORDERS
+      dependencies:
+      - distribution_ready
+      - procurement_ready
+    supply_chain_done:
+      operator: airflow.providers.standard.operators.empty.EmptyOperator
+      dependencies:
+      - execute_orders

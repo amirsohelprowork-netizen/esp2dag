@@ -1,0 +1,14 @@
+%% workflow: order_fulfillment
+flowchart TD
+  PICK_ORDERS["PICK_ORDERS<br/>JOB"]
+  PACK_ORDERS_ZONE_A["PACK_ORDERS_ZONE_A<br/>JOB"]
+  PACK_ORDERS_ZONE_B["PACK_ORDERS_ZONE_B<br/>JOB"]
+  SHIP_ORDERS["SHIP_ORDERS<br/>JOB"]
+  PACK_ORDERS_ZONE_A --> SHIP_ORDERS
+  PACK_ORDERS_ZONE_B --> SHIP_ORDERS
+  PICK_ORDERS --> PACK_ORDERS_ZONE_A
+  PICK_ORDERS --> PACK_ORDERS_ZONE_B
+  %% PICK_ORDERS -> MainframeSubmitJobOperator
+  %% PACK_ORDERS_ZONE_A -> MainframeSubmitJobOperator
+  %% PACK_ORDERS_ZONE_B -> MainframeSubmitJobOperator
+  %% SHIP_ORDERS -> MainframeSubmitJobOperator

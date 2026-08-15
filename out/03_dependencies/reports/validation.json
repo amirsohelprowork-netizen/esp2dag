@@ -1,0 +1,107 @@
+{
+  "by_code": {
+    "W300": 5,
+    "W400": 5,
+    "W501": 1
+  },
+  "by_severity": {
+    "WARNING": 11
+  },
+  "by_stage": {
+    "event_merger": 1,
+    "parser": 5,
+    "semantic": 5
+  },
+  "diagnostic_samples": [
+    {
+      "application": "DRUG_INVENTORY",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "DRUG_INVENTORY",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "CLINICAL_TRIALS_ETL",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "CLINICAL_TRIALS_ETL",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "REGULATORY_REPORTING",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "REGULATORY_REPORTING",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "SUPPLY_CHAIN",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "SUPPLY_CHAIN",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "ORDER_FULFILLMENT",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "ORDER_FULFILLMENT",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": null,
+      "code": "W501",
+      "job": null,
+      "message": "Event 'PROD.SAP_EXTRACT' did not match any compiled application in this run.",
+      "severity": "WARNING",
+      "stage": "event_merger"
+    }
+  ],
+  "failed_units": [],
+  "has_errors": false
+}

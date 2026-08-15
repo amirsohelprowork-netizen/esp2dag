@@ -1,0 +1,50 @@
+lending_batch:
+  description: LENDING_BATCH application
+  schedule: 0 20 * * 1-5
+  catchup: false
+  default_args:
+    owner: maestro
+    start_date: '2024-01-01'
+  tasks:
+    wait_core_banking:
+      operator: airflow.providers.standard.sensors.external_task.ExternalTaskSensor
+      external_dag_id: core_banking_eod
+      external_task_id: wait_core_banking
+      mode: reschedule
+    ln_extract_payments:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: LN_EXTRACT_PAYMENTS
+      pool: nw_0002
+      dependencies:
+      - wait_core_banking
+    ln_apply_payments:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: LN_APPLY_PAYMENTS
+      ccchk: (0)
+      dependencies:
+      - ln_extract_payments
+    ln_calc_amortization:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: LN_CALC_AMORTIZATION
+      dependencies:
+      - ln_apply_payments
+    ln_past_due_check:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: LN_PAST_DUE_CHECK
+      dependencies:
+      - ln_apply_payments
+    ln_collections_notify:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: LN_COLLECTIONS_NOTIFY
+      dependencies:
+      - ln_past_due_check
+    ln_update_schedules:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: LN_UPDATE_SCHEDULES
+      dependencies:
+      - ln_calc_amortization
+      - ln_past_due_check
+    ln_complete:
+      operator: airflow.providers.standard.operators.empty.EmptyOperator
+      dependencies:
+      - ln_update_schedules

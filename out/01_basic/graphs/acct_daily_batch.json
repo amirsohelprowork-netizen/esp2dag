@@ -1,0 +1,91 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "EXTRACT_TRANSACTIONS",
+      "kind": "success",
+      "resolved": true,
+      "to": "VALIDATE_DATA"
+    },
+    {
+      "condition": null,
+      "from": "POST_ACCOUNTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "RECONCILE"
+    },
+    {
+      "condition": null,
+      "from": "RECONCILE",
+      "kind": "success",
+      "resolved": true,
+      "to": "AUDIT_TRAIL"
+    },
+    {
+      "condition": null,
+      "from": "VALIDATE_DATA",
+      "kind": "success",
+      "resolved": true,
+      "to": "ERR_HANDLER"
+    },
+    {
+      "condition": null,
+      "from": "VALIDATE_DATA",
+      "kind": "success",
+      "resolved": true,
+      "to": "POST_ACCOUNTS"
+    }
+  ],
+  "name": "ACCT_DAILY_BATCH",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "EXTRACT_TRANSACTIONS",
+      "name": "EXTRACT_TRANSACTIONS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "VALIDATE_DATA",
+      "name": "VALIDATE_DATA",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "POST_ACCOUNTS",
+      "name": "POST_ACCOUNTS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "RECONCILE",
+      "name": "RECONCILE",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "AUDIT_TRAIL",
+      "name": "AUDIT_TRAIL",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "ERR_HANDLER",
+      "name": "ERR_HANDLER",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "acct_daily_batch"
+}

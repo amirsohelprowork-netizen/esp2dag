@@ -1,0 +1,25 @@
+{
+  "errors": 0,
+  "failed_conversions": 0,
+  "mapped_schedules": 2,
+  "operator_mix": {
+    "airflow.providers.ssh.operators.ssh.SSHOperator": 2,
+    "airflow.providers.standard.operators.empty.EmptyOperator": 3,
+    "custom_operators.mainframe.MainframeSubmitJobOperator": 22
+  },
+  "schedule_samples": {
+    "0 4,22 * * *": 1,
+    "0 6 * * *": 1,
+    "01.00 EVERY 2 WEEKS STARTING JAN 8 2025": 1,
+    "08.00 1ST WORKDAY OF QUARTER": 1,
+    "18.00 LAST WORKDAY OF MONTH": 1
+  },
+  "successful_conversions": 5,
+  "total_applications": 5,
+  "total_dependencies": 26,
+  "total_events": 6,
+  "total_jobs": 27,
+  "unmapped_or_partial_schedules": 3,
+  "unsupported_features": 0,
+  "warnings": 21
+}

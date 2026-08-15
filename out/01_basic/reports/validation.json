@@ -1,0 +1,65 @@
+{
+  "by_code": {
+    "W300": 3,
+    "W400": 3
+  },
+  "by_severity": {
+    "WARNING": 6
+  },
+  "by_stage": {
+    "parser": 3,
+    "semantic": 3
+  },
+  "diagnostic_samples": [
+    {
+      "application": "ACCT_DAILY_BATCH",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "ACCT_DAILY_BATCH",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "GL_POSTING",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "GL_POSTING",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "REPORT_DISTRIBUTION",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "REPORT_DISTRIBUTION",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    }
+  ],
+  "failed_units": [],
+  "has_errors": false
+}

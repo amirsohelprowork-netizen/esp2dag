@@ -1,0 +1,202 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "CB_APPLY_CHARGES",
+      "kind": "success",
+      "resolved": true,
+      "to": "CB_FX_REVALUATION"
+    },
+    {
+      "condition": null,
+      "from": "CB_APPLY_CHARGES",
+      "kind": "success",
+      "resolved": true,
+      "to": "CB_REVALUE_ACCOUNTS"
+    },
+    {
+      "condition": null,
+      "from": "CB_CALC_FEES",
+      "kind": "success",
+      "resolved": true,
+      "to": "CB_APPLY_CHARGES"
+    },
+    {
+      "condition": null,
+      "from": "CB_CALC_INTEREST",
+      "kind": "success",
+      "resolved": true,
+      "to": "CB_APPLY_CHARGES"
+    },
+    {
+      "condition": null,
+      "from": "CB_CUTOFF_TRANSACTIONS",
+      "kind": "success",
+      "resolved": true,
+      "to": "CB_POST_CREDITS"
+    },
+    {
+      "condition": null,
+      "from": "CB_CUTOFF_TRANSACTIONS",
+      "kind": "success",
+      "resolved": true,
+      "to": "CB_POST_DEBITS"
+    },
+    {
+      "condition": null,
+      "from": "CB_FX_REVALUATION",
+      "kind": "success",
+      "resolved": true,
+      "to": "CB_REGULATORY_EXTRACT"
+    },
+    {
+      "condition": null,
+      "from": "CB_POST_CREDITS",
+      "kind": "success",
+      "resolved": true,
+      "to": "CB_UPDATE_BALANCES"
+    },
+    {
+      "condition": null,
+      "from": "CB_POST_DEBITS",
+      "kind": "success",
+      "resolved": true,
+      "to": "CB_UPDATE_BALANCES"
+    },
+    {
+      "condition": null,
+      "from": "CB_REGULATORY_EXTRACT",
+      "kind": "success",
+      "resolved": true,
+      "to": "CB_EOD_COMPLETE"
+    },
+    {
+      "condition": null,
+      "from": "CB_REGULATORY_EXTRACT",
+      "kind": "success",
+      "resolved": true,
+      "to": "CB_GENERATE_STATEMENTS"
+    },
+    {
+      "condition": null,
+      "from": "CB_REVALUE_ACCOUNTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "CB_REGULATORY_EXTRACT"
+    },
+    {
+      "condition": null,
+      "from": "CB_UPDATE_BALANCES",
+      "kind": "success",
+      "resolved": true,
+      "to": "CB_CALC_FEES"
+    },
+    {
+      "condition": null,
+      "from": "CB_UPDATE_BALANCES",
+      "kind": "success",
+      "resolved": true,
+      "to": "CB_CALC_INTEREST"
+    }
+  ],
+  "name": "CORE_BANKING_EOD",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "CB_CUTOFF_TRANSACTIONS",
+      "name": "CB_CUTOFF_TRANSACTIONS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "CB_POST_DEBITS",
+      "name": "CB_POST_DEBITS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "CB_POST_CREDITS",
+      "name": "CB_POST_CREDITS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "CB_UPDATE_BALANCES",
+      "name": "CB_UPDATE_BALANCES",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "CB_CALC_INTEREST",
+      "name": "CB_CALC_INTEREST",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "CB_CALC_FEES",
+      "name": "CB_CALC_FEES",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "CB_APPLY_CHARGES",
+      "name": "CB_APPLY_CHARGES",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "CB_REVALUE_ACCOUNTS",
+      "name": "CB_REVALUE_ACCOUNTS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "CB_FX_REVALUATION",
+      "name": "CB_FX_REVALUATION",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "CB_REGULATORY_EXTRACT",
+      "name": "CB_REGULATORY_EXTRACT",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "CB_GENERATE_STATEMENTS",
+      "name": "CB_GENERATE_STATEMENTS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "CB_EOD_COMPLETE",
+      "name": "CB_EOD_COMPLETE",
+      "operator": "airflow.providers.standard.operators.empty.EmptyOperator",
+      "task_type": "empty",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "core_banking_eod"
+}

@@ -1,0 +1,128 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "LN_APPLY_PAYMENTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "LN_CALC_AMORTIZATION"
+    },
+    {
+      "condition": null,
+      "from": "LN_APPLY_PAYMENTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "LN_PAST_DUE_CHECK"
+    },
+    {
+      "condition": null,
+      "from": "LN_CALC_AMORTIZATION",
+      "kind": "success",
+      "resolved": true,
+      "to": "LN_UPDATE_SCHEDULES"
+    },
+    {
+      "condition": null,
+      "from": "LN_EXTRACT_PAYMENTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "LN_APPLY_PAYMENTS"
+    },
+    {
+      "condition": null,
+      "from": "LN_PAST_DUE_CHECK",
+      "kind": "success",
+      "resolved": true,
+      "to": "LN_COLLECTIONS_NOTIFY"
+    },
+    {
+      "condition": null,
+      "from": "LN_PAST_DUE_CHECK",
+      "kind": "success",
+      "resolved": true,
+      "to": "LN_UPDATE_SCHEDULES"
+    },
+    {
+      "condition": null,
+      "from": "LN_UPDATE_SCHEDULES",
+      "kind": "success",
+      "resolved": true,
+      "to": "LN_COMPLETE"
+    },
+    {
+      "condition": null,
+      "from": "WAIT_CORE_BANKING",
+      "kind": "success",
+      "resolved": true,
+      "to": "LN_EXTRACT_PAYMENTS"
+    }
+  ],
+  "name": "LENDING_BATCH",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "WAIT_CORE_BANKING",
+      "name": "WAIT_CORE_BANKING",
+      "operator": "airflow.providers.standard.sensors.external_task.ExternalTaskSensor",
+      "task_type": "sensor_external",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "LN_EXTRACT_PAYMENTS",
+      "name": "LN_EXTRACT_PAYMENTS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "LN_APPLY_PAYMENTS",
+      "name": "LN_APPLY_PAYMENTS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "LN_CALC_AMORTIZATION",
+      "name": "LN_CALC_AMORTIZATION",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "LN_PAST_DUE_CHECK",
+      "name": "LN_PAST_DUE_CHECK",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "LN_COLLECTIONS_NOTIFY",
+      "name": "LN_COLLECTIONS_NOTIFY",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "LN_UPDATE_SCHEDULES",
+      "name": "LN_UPDATE_SCHEDULES",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "LN_COMPLETE",
+      "name": "LN_COMPLETE",
+      "operator": "airflow.providers.standard.operators.empty.EmptyOperator",
+      "task_type": "empty",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "lending_batch"
+}

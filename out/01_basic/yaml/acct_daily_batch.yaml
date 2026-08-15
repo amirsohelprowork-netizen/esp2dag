@@ -1,0 +1,37 @@
+acct_daily_batch:
+  description: ACCT_DAILY_BATCH application
+  schedule: 0 22 * * *
+  catchup: false
+  default_args:
+    owner: maestro
+    start_date: '2024-01-01'
+  tasks:
+    extract_transactions:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: EXTRACT_TRANSACTIONS
+    validate_data:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: VALIDATE_DATA
+      ccchk: (0,4)
+      dependencies:
+      - extract_transactions
+    post_accounts:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: POST_ACCOUNTS
+      dependencies:
+      - validate_data
+    reconcile:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: RECONCILE
+      dependencies:
+      - post_accounts
+    audit_trail:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: AUDIT_TRAIL
+      dependencies:
+      - reconcile
+    err_handler:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: ERR_HANDLER
+      dependencies:
+      - validate_data

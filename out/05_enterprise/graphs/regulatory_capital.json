@@ -1,0 +1,128 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "RC_BUILD_SUBMISSION",
+      "kind": "success",
+      "resolved": true,
+      "to": "RC_GENERATE_BOARD_REPORT"
+    },
+    {
+      "condition": null,
+      "from": "RC_BUILD_SUBMISSION",
+      "kind": "success",
+      "resolved": true,
+      "to": "RC_SAP_POST_CAPITAL"
+    },
+    {
+      "condition": null,
+      "from": "RC_CALC_CAPITAL_RATIO",
+      "kind": "success",
+      "resolved": true,
+      "to": "RC_BUILD_SUBMISSION"
+    },
+    {
+      "condition": null,
+      "from": "RC_CALC_RWA",
+      "kind": "success",
+      "resolved": true,
+      "to": "RC_CALC_CAPITAL_RATIO"
+    },
+    {
+      "condition": null,
+      "from": "RC_EXTRACT_POSITIONS",
+      "kind": "success",
+      "resolved": true,
+      "to": "RC_EXTRACT_RISK_WEIGHTS"
+    },
+    {
+      "condition": null,
+      "from": "RC_EXTRACT_RISK_WEIGHTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "RC_CALC_RWA"
+    },
+    {
+      "condition": null,
+      "from": "RC_GENERATE_BOARD_REPORT",
+      "kind": "success",
+      "resolved": true,
+      "to": "RC_SUBMIT_TO_REGULATOR"
+    },
+    {
+      "condition": null,
+      "from": "RC_SAP_POST_CAPITAL",
+      "kind": "success",
+      "resolved": true,
+      "to": "RC_SUBMIT_TO_REGULATOR"
+    }
+  ],
+  "name": "REGULATORY_CAPITAL",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "RC_EXTRACT_POSITIONS",
+      "name": "RC_EXTRACT_POSITIONS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "RC_EXTRACT_RISK_WEIGHTS",
+      "name": "RC_EXTRACT_RISK_WEIGHTS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "AIX_JOB",
+      "id": "RC_CALC_RWA",
+      "name": "RC_CALC_RWA",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "RC_CALC_CAPITAL_RATIO",
+      "name": "RC_CALC_CAPITAL_RATIO",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "LINUX_JOB",
+      "id": "RC_BUILD_SUBMISSION",
+      "name": "RC_BUILD_SUBMISSION",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "SAP_JOB",
+      "id": "RC_SAP_POST_CAPITAL",
+      "name": "RC_SAP_POST_CAPITAL",
+      "operator": "airflow.providers.sap.operators.sap_rfc.SapRfcOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "NT_JOB",
+      "id": "RC_GENERATE_BOARD_REPORT",
+      "name": "RC_GENERATE_BOARD_REPORT",
+      "operator": "airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "RC_SUBMIT_TO_REGULATOR",
+      "name": "RC_SUBMIT_TO_REGULATOR",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "regulatory_capital"
+}

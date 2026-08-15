@@ -1,0 +1,98 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "BUILD_CUBES",
+      "kind": "success",
+      "resolved": true,
+      "to": "REFRESH_DASHBOARDS"
+    },
+    {
+      "condition": null,
+      "from": "LOAD_WAREHOUSE",
+      "kind": "success",
+      "resolved": true,
+      "to": "BUILD_CUBES"
+    },
+    {
+      "condition": null,
+      "from": "STAGE_RAW_DATA",
+      "kind": "success",
+      "resolved": true,
+      "to": "TRANSFORM_DIMENSIONS"
+    },
+    {
+      "condition": null,
+      "from": "STAGE_RAW_DATA",
+      "kind": "success",
+      "resolved": true,
+      "to": "TRANSFORM_FACTS"
+    },
+    {
+      "condition": null,
+      "from": "TRANSFORM_DIMENSIONS",
+      "kind": "success",
+      "resolved": true,
+      "to": "LOAD_WAREHOUSE"
+    },
+    {
+      "condition": null,
+      "from": "TRANSFORM_FACTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "LOAD_WAREHOUSE"
+    }
+  ],
+  "name": "DATA_WAREHOUSE_ETL",
+  "nodes": [
+    {
+      "esp_job_type": "LINUX_JOB",
+      "id": "STAGE_RAW_DATA",
+      "name": "STAGE_RAW_DATA",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "LINUX_JOB",
+      "id": "TRANSFORM_DIMENSIONS",
+      "name": "TRANSFORM_DIMENSIONS",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "UNIX_JOB",
+      "id": "TRANSFORM_FACTS",
+      "name": "TRANSFORM_FACTS",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "LINUX_JOB",
+      "id": "LOAD_WAREHOUSE",
+      "name": "LOAD_WAREHOUSE",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "LINUX_JOB",
+      "id": "BUILD_CUBES",
+      "name": "BUILD_CUBES",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "LINUX_JOB",
+      "id": "REFRESH_DASHBOARDS",
+      "name": "REFRESH_DASHBOARDS",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "data_warehouse_etl"
+}

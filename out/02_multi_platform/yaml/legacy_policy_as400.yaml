@@ -1,0 +1,38 @@
+legacy_policy_as400:
+  description: LEGACY_POLICY_AS400 application
+  schedule: 0 21 * * *
+  catchup: false
+  default_args:
+    owner: QSECOFR
+    start_date: '2024-01-01'
+  tasks:
+    extract_policies:
+      operator: custom_operators.as400.AS400Operator
+      conn_id: AS400_PROD_01_AS400
+      command: CALL PGM(POLLIB/POLEXT) PARM(DAILY)
+      job_queue: QBATCH
+      pool: AS400_PROD_01
+    calc_premiums:
+      operator: custom_operators.as400.AS400Operator
+      conn_id: AS400_PROD_01_AS400
+      command: CALL PGM(POLLIB/PREMCALC)
+      job_queue: QBATCH
+      pool: AS400_PROD_01
+      dependencies:
+      - extract_policies
+    update_policy_db:
+      operator: custom_operators.as400.AS400Operator
+      conn_id: AS400_PROD_01_AS400
+      command: CALL PGM(POLLIB/POLUPD) PARM(COMMIT)
+      job_queue: QBATCH
+      pool: AS400_PROD_01
+      dependencies:
+      - calc_premiums
+    generate_notices:
+      operator: custom_operators.as400.AS400Operator
+      conn_id: AS400_PROD_01_AS400
+      command: CALL PGM(POLLIB/NOTICEGEN)
+      job_queue: QBATCH
+      pool: AS400_PROD_01
+      dependencies:
+      - calc_premiums

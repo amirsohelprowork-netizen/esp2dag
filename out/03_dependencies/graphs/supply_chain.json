@@ -1,0 +1,128 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "DISTRIBUTION_READY",
+      "kind": "success",
+      "resolved": true,
+      "to": "EXECUTE_ORDERS"
+    },
+    {
+      "condition": null,
+      "from": "EXECUTE_ORDERS",
+      "kind": "success",
+      "resolved": true,
+      "to": "SUPPLY_CHAIN_DONE"
+    },
+    {
+      "condition": null,
+      "from": "FORECAST_DEMAND",
+      "kind": "success",
+      "resolved": true,
+      "to": "PLAN_DISTRIBUTION"
+    },
+    {
+      "condition": null,
+      "from": "FORECAST_DEMAND",
+      "kind": "success",
+      "resolved": true,
+      "to": "PLAN_PROCUREMENT"
+    },
+    {
+      "condition": null,
+      "from": "PLAN_DISTRIBUTION",
+      "kind": "success",
+      "resolved": true,
+      "to": "DISTRIBUTION_READY"
+    },
+    {
+      "condition": null,
+      "from": "PLAN_PROCUREMENT",
+      "kind": "success",
+      "resolved": true,
+      "to": "PROCUREMENT_READY"
+    },
+    {
+      "condition": null,
+      "from": "PROCUREMENT_READY",
+      "kind": "success",
+      "resolved": true,
+      "to": "EXECUTE_ORDERS"
+    },
+    {
+      "condition": null,
+      "from": "WAIT_INV_DONE",
+      "kind": "success",
+      "resolved": true,
+      "to": "FORECAST_DEMAND"
+    }
+  ],
+  "name": "SUPPLY_CHAIN",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "WAIT_INV_DONE",
+      "name": "WAIT_INV_DONE",
+      "operator": "airflow.providers.standard.sensors.external_task.ExternalTaskSensor",
+      "task_type": "sensor_external",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "FORECAST_DEMAND",
+      "name": "FORECAST_DEMAND",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "PLAN_PROCUREMENT",
+      "name": "PLAN_PROCUREMENT",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "PLAN_DISTRIBUTION",
+      "name": "PLAN_DISTRIBUTION",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "PROCUREMENT_READY",
+      "name": "PROCUREMENT_READY",
+      "operator": "airflow.providers.standard.operators.empty.EmptyOperator",
+      "task_type": "empty",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "DISTRIBUTION_READY",
+      "name": "DISTRIBUTION_READY",
+      "operator": "airflow.providers.standard.operators.empty.EmptyOperator",
+      "task_type": "empty",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "EXECUTE_ORDERS",
+      "name": "EXECUTE_ORDERS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "SUPPLY_CHAIN_DONE",
+      "name": "SUPPLY_CHAIN_DONE",
+      "operator": "airflow.providers.standard.operators.empty.EmptyOperator",
+      "task_type": "empty",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "supply_chain"
+}

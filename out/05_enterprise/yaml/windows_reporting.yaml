@@ -1,0 +1,51 @@
+windows_reporting:
+  description: WINDOWS_REPORTING application
+  schedule: 0 4 * * 1-5
+  catchup: false
+  default_args:
+    owner: svc_reports
+    start_date: '2024-01-01'
+  tasks:
+    wait_sap_for_reports:
+      operator: airflow.providers.standard.sensors.external_task.ExternalTaskSensor
+      external_dag_id: sap_financials
+      external_task_id: wait_sap_for_reports
+      mode: reschedule
+    wait_risk_for_reports:
+      operator: airflow.providers.standard.sensors.external_task.ExternalTaskSensor
+      external_dag_id: market_risk_var
+      external_task_id: wait_risk_for_reports
+      mode: reschedule
+    wr_build_reports:
+      operator: airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator
+      ssh_conn_id: WIN_RPT_01
+      command: E:\Reporting\scripts\build_all_reports.bat
+      dependencies:
+      - wait_risk_for_reports
+      - wait_sap_for_reports
+    wr_generate_executive:
+      operator: airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator
+      ssh_conn_id: WIN_RPT_01
+      command: E:\Reporting\scripts\exec_dashboard.ps1
+      dependencies:
+      - wr_build_reports
+    wr_generate_regulatory:
+      operator: airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator
+      ssh_conn_id: WIN_RPT_02
+      command: E:\Reporting\scripts\regulatory_reports.bat
+      dependencies:
+      - wr_build_reports
+    wr_generate_branch:
+      operator: airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator
+      ssh_conn_id: WIN_RPT_02
+      command: E:\Reporting\scripts\branch_reports.bat
+      dependencies:
+      - wr_build_reports
+    wr_distribute:
+      operator: airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator
+      ssh_conn_id: WIN_RPT_01
+      command: E:\Reporting\scripts\distribute_reports.ps1
+      dependencies:
+      - wr_generate_branch
+      - wr_generate_executive
+      - wr_generate_regulatory

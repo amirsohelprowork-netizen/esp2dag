@@ -1,0 +1,27 @@
+{
+  "errors": 0,
+  "failed_conversions": 0,
+  "mapped_schedules": 5,
+  "operator_mix": {
+    "airflow.providers.ssh.operators.ssh.SSHOperator": 4,
+    "airflow.providers.standard.operators.empty.EmptyOperator": 4,
+    "airflow.providers.standard.sensors.external_task.ExternalTaskSensor": 2,
+    "custom_operators.mainframe.MainframeDatasetSensor": 1,
+    "custom_operators.mainframe.MainframeSubmitJobOperator": 15
+  },
+  "schedule_samples": {
+    "0 0 * * *": 1,
+    "0 1 * * *": 1,
+    "0 3 * * *": 1,
+    "0 6 * * 1-5": 1,
+    "0 7 * * *": 1
+  },
+  "successful_conversions": 5,
+  "total_applications": 5,
+  "total_dependencies": 26,
+  "total_events": 7,
+  "total_jobs": 26,
+  "unmapped_or_partial_schedules": 0,
+  "unsupported_features": 0,
+  "warnings": 11
+}

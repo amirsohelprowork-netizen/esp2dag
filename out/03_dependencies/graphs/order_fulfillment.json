@@ -1,0 +1,68 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "PACK_ORDERS_ZONE_A",
+      "kind": "success",
+      "resolved": true,
+      "to": "SHIP_ORDERS"
+    },
+    {
+      "condition": null,
+      "from": "PACK_ORDERS_ZONE_B",
+      "kind": "success",
+      "resolved": true,
+      "to": "SHIP_ORDERS"
+    },
+    {
+      "condition": null,
+      "from": "PICK_ORDERS",
+      "kind": "success",
+      "resolved": true,
+      "to": "PACK_ORDERS_ZONE_A"
+    },
+    {
+      "condition": null,
+      "from": "PICK_ORDERS",
+      "kind": "success",
+      "resolved": true,
+      "to": "PACK_ORDERS_ZONE_B"
+    }
+  ],
+  "name": "ORDER_FULFILLMENT",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "PICK_ORDERS",
+      "name": "PICK_ORDERS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "PACK_ORDERS_ZONE_A",
+      "name": "PACK_ORDERS_ZONE_A",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "PACK_ORDERS_ZONE_B",
+      "name": "PACK_ORDERS_ZONE_B",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "SHIP_ORDERS",
+      "name": "SHIP_ORDERS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "order_fulfillment"
+}

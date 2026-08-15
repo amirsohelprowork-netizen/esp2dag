@@ -1,0 +1,57 @@
+{
+  "applications": [
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeSubmitJobOperator"
+      ],
+      "dependency_count": 5,
+      "name": "ACCT_DAILY_BATCH",
+      "operator_mix": {
+        "custom_operators.mainframe.MainframeSubmitJobOperator": 6
+      },
+      "schedule": "0 22 * * *",
+      "schedule_status": "mapped",
+      "task_count": 6,
+      "unsupported_features": [],
+      "workflow_id": "acct_daily_batch"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeSubmitJobOperator"
+      ],
+      "dependency_count": 7,
+      "name": "GL_POSTING",
+      "operator_mix": {
+        "custom_operators.mainframe.MainframeSubmitJobOperator": 6
+      },
+      "schedule": "0 23 * * 1-5",
+      "schedule_status": "mapped",
+      "task_count": 6,
+      "unsupported_features": [],
+      "workflow_id": "gl_posting"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeSubmitJobOperator"
+      ],
+      "dependency_count": 3,
+      "name": "REPORT_DISTRIBUTION",
+      "operator_mix": {
+        "custom_operators.mainframe.MainframeSubmitJobOperator": 4
+      },
+      "schedule": "0 5 * * *",
+      "schedule_status": "mapped",
+      "task_count": 4,
+      "unsupported_features": [],
+      "workflow_id": "report_distribution"
+    }
+  ],
+  "colliding_dag_ids": [],
+  "custom_operators_required": {
+    "custom_operators.mainframe.MainframeSubmitJobOperator": 16
+  },
+  "manual_review_count": 3
+}

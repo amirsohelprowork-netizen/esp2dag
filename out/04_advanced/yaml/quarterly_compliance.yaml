@@ -1,0 +1,32 @@
+quarterly_compliance:
+  description: QUARTERLY_COMPLIANCE application
+  catchup: false
+  default_args:
+    owner: maestro
+    start_date: '2024-01-01'
+  tasks:
+    extract_quarterly_data:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: EXTRACT_QUARTERLY_DATA
+    standard_audit:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: STANDARD_AUDIT
+      ccchk: (0,4)
+      dependencies:
+      - extract_quarterly_data
+    safety_audit:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: SAFETY_AUDIT
+      dependencies:
+      - extract_quarterly_data
+    compile_quarterly_report:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: COMPILE_QUARTERLY_REPORT
+      dependencies:
+      - safety_audit
+      - standard_audit
+    submit_to_faa:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: SUBMIT_TO_FAA
+      dependencies:
+      - compile_quarterly_report

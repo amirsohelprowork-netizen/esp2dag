@@ -1,0 +1,120 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "WAIT_RISK_FOR_REPORTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "WR_BUILD_REPORTS"
+    },
+    {
+      "condition": null,
+      "from": "WAIT_SAP_FOR_REPORTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "WR_BUILD_REPORTS"
+    },
+    {
+      "condition": null,
+      "from": "WR_BUILD_REPORTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "WR_GENERATE_BRANCH"
+    },
+    {
+      "condition": null,
+      "from": "WR_BUILD_REPORTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "WR_GENERATE_EXECUTIVE"
+    },
+    {
+      "condition": null,
+      "from": "WR_BUILD_REPORTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "WR_GENERATE_REGULATORY"
+    },
+    {
+      "condition": null,
+      "from": "WR_GENERATE_BRANCH",
+      "kind": "success",
+      "resolved": true,
+      "to": "WR_DISTRIBUTE"
+    },
+    {
+      "condition": null,
+      "from": "WR_GENERATE_EXECUTIVE",
+      "kind": "success",
+      "resolved": true,
+      "to": "WR_DISTRIBUTE"
+    },
+    {
+      "condition": null,
+      "from": "WR_GENERATE_REGULATORY",
+      "kind": "success",
+      "resolved": true,
+      "to": "WR_DISTRIBUTE"
+    }
+  ],
+  "name": "WINDOWS_REPORTING",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "WAIT_SAP_FOR_REPORTS",
+      "name": "WAIT_SAP_FOR_REPORTS",
+      "operator": "airflow.providers.standard.sensors.external_task.ExternalTaskSensor",
+      "task_type": "sensor_external",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "WAIT_RISK_FOR_REPORTS",
+      "name": "WAIT_RISK_FOR_REPORTS",
+      "operator": "airflow.providers.standard.sensors.external_task.ExternalTaskSensor",
+      "task_type": "sensor_external",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "NT_JOB",
+      "id": "WR_BUILD_REPORTS",
+      "name": "WR_BUILD_REPORTS",
+      "operator": "airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "NT_JOB",
+      "id": "WR_GENERATE_EXECUTIVE",
+      "name": "WR_GENERATE_EXECUTIVE",
+      "operator": "airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "NT_JOB",
+      "id": "WR_GENERATE_REGULATORY",
+      "name": "WR_GENERATE_REGULATORY",
+      "operator": "airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "NT_JOB",
+      "id": "WR_GENERATE_BRANCH",
+      "name": "WR_GENERATE_BRANCH",
+      "operator": "airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "NT_JOB",
+      "id": "WR_DISTRIBUTE",
+      "name": "WR_DISTRIBUTE",
+      "operator": "airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator",
+      "task_type": "bash",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "windows_reporting"
+}

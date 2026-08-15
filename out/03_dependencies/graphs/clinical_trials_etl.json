@@ -1,0 +1,83 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "ANALYZE_EFFICACY",
+      "kind": "success",
+      "resolved": true,
+      "to": "TRIAL_REPORT"
+    },
+    {
+      "condition": null,
+      "from": "ANALYZE_SAFETY",
+      "kind": "success",
+      "resolved": true,
+      "to": "TRIAL_REPORT"
+    },
+    {
+      "condition": null,
+      "from": "EXTRACT_TRIAL_DATA",
+      "kind": "success",
+      "resolved": true,
+      "to": "ANALYZE_EFFICACY"
+    },
+    {
+      "condition": null,
+      "from": "EXTRACT_TRIAL_DATA",
+      "kind": "success",
+      "resolved": true,
+      "to": "ANALYZE_SAFETY"
+    },
+    {
+      "condition": null,
+      "from": "WAIT_INVENTORY",
+      "kind": "success",
+      "resolved": true,
+      "to": "EXTRACT_TRIAL_DATA"
+    }
+  ],
+  "name": "CLINICAL_TRIALS_ETL",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "WAIT_INVENTORY",
+      "name": "WAIT_INVENTORY",
+      "operator": "airflow.providers.standard.sensors.external_task.ExternalTaskSensor",
+      "task_type": "sensor_external",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "LINUX_JOB",
+      "id": "EXTRACT_TRIAL_DATA",
+      "name": "EXTRACT_TRIAL_DATA",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "LINUX_JOB",
+      "id": "ANALYZE_EFFICACY",
+      "name": "ANALYZE_EFFICACY",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "LINUX_JOB",
+      "id": "ANALYZE_SAFETY",
+      "name": "ANALYZE_SAFETY",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "LINUX_JOB",
+      "id": "TRIAL_REPORT",
+      "name": "TRIAL_REPORT",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "clinical_trials_etl"
+}

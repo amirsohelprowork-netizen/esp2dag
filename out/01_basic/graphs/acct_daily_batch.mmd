@@ -1,0 +1,19 @@
+%% workflow: acct_daily_batch
+flowchart TD
+  EXTRACT_TRANSACTIONS["EXTRACT_TRANSACTIONS<br/>JOB"]
+  VALIDATE_DATA["VALIDATE_DATA<br/>JOB"]
+  POST_ACCOUNTS["POST_ACCOUNTS<br/>JOB"]
+  RECONCILE["RECONCILE<br/>JOB"]
+  AUDIT_TRAIL["AUDIT_TRAIL<br/>JOB"]
+  ERR_HANDLER["ERR_HANDLER<br/>JOB"]
+  EXTRACT_TRANSACTIONS --> VALIDATE_DATA
+  POST_ACCOUNTS --> RECONCILE
+  RECONCILE --> AUDIT_TRAIL
+  VALIDATE_DATA --> ERR_HANDLER
+  VALIDATE_DATA --> POST_ACCOUNTS
+  %% EXTRACT_TRANSACTIONS -> MainframeSubmitJobOperator
+  %% VALIDATE_DATA -> MainframeSubmitJobOperator
+  %% POST_ACCOUNTS -> MainframeSubmitJobOperator
+  %% RECONCILE -> MainframeSubmitJobOperator
+  %% AUDIT_TRAIL -> MainframeSubmitJobOperator
+  %% ERR_HANDLER -> MainframeSubmitJobOperator

@@ -1,0 +1,39 @@
+gl_posting:
+  description: GL_POSTING application
+  schedule: 0 23 * * 1-5
+  catchup: false
+  default_args:
+    owner: maestro
+    start_date: '2024-01-01'
+  tasks:
+    gl_initialize:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: GL_INITIALIZE
+    gl_post_ar:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: GL_POST_AR
+      dependencies:
+      - gl_initialize
+    gl_post_ap:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: GL_POST_AP
+      dependencies:
+      - gl_initialize
+    gl_post_payroll:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: GL_POST_PAYROLL
+      dependencies:
+      - gl_initialize
+    gl_consolidate:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: GL_CONSOLIDATE
+      dependencies:
+      - gl_post_ap
+      - gl_post_ar
+      - gl_post_payroll
+    gl_balance_check:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: GL_BALANCE_CHECK
+      ccchk: (0)
+      dependencies:
+      - gl_consolidate

@@ -1,0 +1,32 @@
+loyalty_biweekly:
+  description: LOYALTY_BIWEEKLY application
+  catchup: false
+  default_args:
+    owner: loyalty_svc
+    start_date: '2024-01-01'
+  tasks:
+    extract_member_activity:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: EXTRACT_MEMBER_ACTIVITY
+    calc_points:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: LNX_LOYALTY_01
+      command: /opt/loyalty/scripts/calculate_points.py
+      dependencies:
+      - extract_member_activity
+    update_tier_status:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: LNX_LOYALTY_01
+      command: /opt/loyalty/scripts/tier_evaluation.py
+      dependencies:
+      - calc_points
+    generate_statements:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: GENERATE_STATEMENTS
+      dependencies:
+      - calc_points
+    loyalty_complete:
+      operator: airflow.providers.standard.operators.empty.EmptyOperator
+      dependencies:
+      - generate_statements
+      - update_tier_status

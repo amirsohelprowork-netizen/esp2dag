@@ -1,0 +1,73 @@
+core_banking_eod:
+  description: CORE_BANKING_EOD application
+  schedule: 30 18 * * 1-5
+  catchup: false
+  default_args:
+    owner: maestro
+    start_date: '2024-01-01'
+  tasks:
+    cb_cutoff_transactions:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: CB_CUTOFF_TRANSACTIONS
+      ccchk: (0)
+    cb_post_debits:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: CB_POST_DEBITS
+      ccchk: (0,4)
+      dependencies:
+      - cb_cutoff_transactions
+    cb_post_credits:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: CB_POST_CREDITS
+      ccchk: (0,4)
+      dependencies:
+      - cb_cutoff_transactions
+    cb_update_balances:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: CB_UPDATE_BALANCES
+      ccchk: (0)
+      dependencies:
+      - cb_post_credits
+      - cb_post_debits
+    cb_calc_interest:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: CB_CALC_INTEREST
+      dependencies:
+      - cb_update_balances
+    cb_calc_fees:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: CB_CALC_FEES
+      dependencies:
+      - cb_update_balances
+    cb_apply_charges:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: CB_APPLY_CHARGES
+      dependencies:
+      - cb_calc_fees
+      - cb_calc_interest
+    cb_revalue_accounts:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: CB_REVALUE_ACCOUNTS
+      dependencies:
+      - cb_apply_charges
+    cb_fx_revaluation:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: CB_FX_REVALUATION
+      dependencies:
+      - cb_apply_charges
+    cb_regulatory_extract:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: CB_REGULATORY_EXTRACT
+      ccchk: (0)
+      dependencies:
+      - cb_fx_revaluation
+      - cb_revalue_accounts
+    cb_generate_statements:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: CB_GENERATE_STATEMENTS
+      dependencies:
+      - cb_regulatory_extract
+    cb_eod_complete:
+      operator: airflow.providers.standard.operators.empty.EmptyOperator
+      dependencies:
+      - cb_regulatory_extract

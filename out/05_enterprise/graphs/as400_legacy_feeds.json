@@ -1,0 +1,61 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "AS4_EXTRACT_ACCOUNTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "AS4_TRANSFORM_DATA"
+    },
+    {
+      "condition": null,
+      "from": "AS4_EXTRACT_CUSTOMERS",
+      "kind": "success",
+      "resolved": true,
+      "to": "AS4_EXTRACT_ACCOUNTS"
+    },
+    {
+      "condition": null,
+      "from": "AS4_TRANSFORM_DATA",
+      "kind": "success",
+      "resolved": true,
+      "to": "AS4_SEND_TO_MQ"
+    }
+  ],
+  "name": "AS400_LEGACY_FEEDS",
+  "nodes": [
+    {
+      "esp_job_type": "AS400_JOB",
+      "id": "AS4_EXTRACT_CUSTOMERS",
+      "name": "AS4_EXTRACT_CUSTOMERS",
+      "operator": "custom_operators.as400.AS400Operator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "AS400_JOB",
+      "id": "AS4_EXTRACT_ACCOUNTS",
+      "name": "AS4_EXTRACT_ACCOUNTS",
+      "operator": "custom_operators.as400.AS400Operator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "AS400_JOB",
+      "id": "AS4_TRANSFORM_DATA",
+      "name": "AS4_TRANSFORM_DATA",
+      "operator": "custom_operators.as400.AS400Operator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "AS400_JOB",
+      "id": "AS4_SEND_TO_MQ",
+      "name": "AS4_SEND_TO_MQ",
+      "operator": "custom_operators.as400.AS400Operator",
+      "task_type": "bash",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "as400_legacy_feeds"
+}

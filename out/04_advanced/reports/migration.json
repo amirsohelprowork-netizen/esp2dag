@@ -1,0 +1,93 @@
+{
+  "applications": [
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeSubmitJobOperator"
+      ],
+      "dependency_count": 7,
+      "name": "FLIGHT_OPS_DAILY",
+      "operator_mix": {
+        "airflow.providers.standard.operators.empty.EmptyOperator": 1,
+        "custom_operators.mainframe.MainframeSubmitJobOperator": 6
+      },
+      "schedule": "0 4,22 * * *",
+      "schedule_status": "mapped",
+      "task_count": 7,
+      "unsupported_features": [],
+      "workflow_id": "flight_ops_daily"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeSubmitJobOperator"
+      ],
+      "dependency_count": 5,
+      "name": "LOYALTY_BIWEEKLY",
+      "operator_mix": {
+        "airflow.providers.ssh.operators.ssh.SSHOperator": 2,
+        "airflow.providers.standard.operators.empty.EmptyOperator": 1,
+        "custom_operators.mainframe.MainframeSubmitJobOperator": 2
+      },
+      "schedule": "01.00 EVERY 2 WEEKS STARTING JAN 8 2025",
+      "schedule_status": "partial",
+      "task_count": 5,
+      "unsupported_features": [],
+      "workflow_id": "loyalty_biweekly"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeSubmitJobOperator"
+      ],
+      "dependency_count": 4,
+      "name": "MAINTENANCE_CYCLIC",
+      "operator_mix": {
+        "airflow.providers.standard.operators.empty.EmptyOperator": 1,
+        "custom_operators.mainframe.MainframeSubmitJobOperator": 4
+      },
+      "schedule": "0 6 * * *",
+      "schedule_status": "mapped",
+      "task_count": 5,
+      "unsupported_features": [],
+      "workflow_id": "maintenance_cyclic"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeSubmitJobOperator"
+      ],
+      "dependency_count": 5,
+      "name": "QUARTERLY_COMPLIANCE",
+      "operator_mix": {
+        "custom_operators.mainframe.MainframeSubmitJobOperator": 5
+      },
+      "schedule": "08.00 1ST WORKDAY OF QUARTER",
+      "schedule_status": "partial",
+      "task_count": 5,
+      "unsupported_features": [],
+      "workflow_id": "quarterly_compliance"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeSubmitJobOperator"
+      ],
+      "dependency_count": 5,
+      "name": "REVENUE_MONTHLY",
+      "operator_mix": {
+        "custom_operators.mainframe.MainframeSubmitJobOperator": 5
+      },
+      "schedule": "18.00 LAST WORKDAY OF MONTH",
+      "schedule_status": "partial",
+      "task_count": 5,
+      "unsupported_features": [],
+      "workflow_id": "revenue_monthly"
+    }
+  ],
+  "colliding_dag_ids": [],
+  "custom_operators_required": {
+    "custom_operators.mainframe.MainframeSubmitJobOperator": 22
+  },
+  "manual_review_count": 5
+}

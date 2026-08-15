@@ -1,0 +1,113 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "CR_CALC_LGD",
+      "kind": "success",
+      "resolved": true,
+      "to": "CR_SIMULATE_DEFAULTS"
+    },
+    {
+      "condition": null,
+      "from": "CR_CALC_PD",
+      "kind": "success",
+      "resolved": true,
+      "to": "CR_SIMULATE_DEFAULTS"
+    },
+    {
+      "condition": null,
+      "from": "CR_EXTRACT_EXPOSURES",
+      "kind": "success",
+      "resolved": true,
+      "to": "CR_CALC_LGD"
+    },
+    {
+      "condition": null,
+      "from": "CR_EXTRACT_EXPOSURES",
+      "kind": "success",
+      "resolved": true,
+      "to": "CR_CALC_PD"
+    },
+    {
+      "condition": null,
+      "from": "CR_PROVISION_CALC",
+      "kind": "success",
+      "resolved": true,
+      "to": "CR_RISK_COMPLETE"
+    },
+    {
+      "condition": null,
+      "from": "CR_SIMULATE_DEFAULTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "CR_PROVISION_CALC"
+    },
+    {
+      "condition": null,
+      "from": "WAIT_CORE_FOR_CREDIT",
+      "kind": "success",
+      "resolved": true,
+      "to": "CR_EXTRACT_EXPOSURES"
+    }
+  ],
+  "name": "CREDIT_RISK_BATCH",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "WAIT_CORE_FOR_CREDIT",
+      "name": "WAIT_CORE_FOR_CREDIT",
+      "operator": "airflow.providers.standard.sensors.external_task.ExternalTaskSensor",
+      "task_type": "sensor_external",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "CR_EXTRACT_EXPOSURES",
+      "name": "CR_EXTRACT_EXPOSURES",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "AIX_JOB",
+      "id": "CR_CALC_PD",
+      "name": "CR_CALC_PD",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "AIX_JOB",
+      "id": "CR_CALC_LGD",
+      "name": "CR_CALC_LGD",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "AIX_JOB",
+      "id": "CR_SIMULATE_DEFAULTS",
+      "name": "CR_SIMULATE_DEFAULTS",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "CR_PROVISION_CALC",
+      "name": "CR_PROVISION_CALC",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "CR_RISK_COMPLETE",
+      "name": "CR_RISK_COMPLETE",
+      "operator": "airflow.providers.standard.operators.empty.EmptyOperator",
+      "task_type": "empty",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "credit_risk_batch"
+}

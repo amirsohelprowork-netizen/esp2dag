@@ -1,0 +1,34 @@
+{
+  "by_external_dag": {
+    "drug_inventory": [
+      {
+        "consumer_dag": "clinical_trials_etl",
+        "consumer_task": "WAIT_INVENTORY",
+        "external_dag_id": "drug_inventory",
+        "external_task_id": "WAIT_INVENTORY"
+      },
+      {
+        "consumer_dag": "supply_chain",
+        "consumer_task": "WAIT_INV_DONE",
+        "external_dag_id": "drug_inventory",
+        "external_task_id": "WAIT_INV_DONE"
+      }
+    ]
+  },
+  "edge_count": 2,
+  "external_edges": [
+    {
+      "consumer_dag": "clinical_trials_etl",
+      "consumer_task": "WAIT_INVENTORY",
+      "external_dag_id": "drug_inventory",
+      "external_task_id": "WAIT_INVENTORY"
+    },
+    {
+      "consumer_dag": "supply_chain",
+      "consumer_task": "WAIT_INV_DONE",
+      "external_dag_id": "drug_inventory",
+      "external_task_id": "WAIT_INV_DONE"
+    }
+  ],
+  "missing_external_dags": []
+}

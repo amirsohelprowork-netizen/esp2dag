@@ -1,0 +1,83 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "CLAIMS_ADJUDICATE",
+      "kind": "success",
+      "resolved": true,
+      "to": "CLAIMS_PAYMENT"
+    },
+    {
+      "condition": null,
+      "from": "CLAIMS_FRAUD_CHECK",
+      "kind": "success",
+      "resolved": true,
+      "to": "CLAIMS_PAYMENT"
+    },
+    {
+      "condition": null,
+      "from": "CLAIMS_INTAKE",
+      "kind": "success",
+      "resolved": true,
+      "to": "CLAIMS_VALIDATE"
+    },
+    {
+      "condition": null,
+      "from": "CLAIMS_VALIDATE",
+      "kind": "success",
+      "resolved": true,
+      "to": "CLAIMS_ADJUDICATE"
+    },
+    {
+      "condition": null,
+      "from": "CLAIMS_VALIDATE",
+      "kind": "success",
+      "resolved": true,
+      "to": "CLAIMS_FRAUD_CHECK"
+    }
+  ],
+  "name": "CLAIMS_WINDOWS",
+  "nodes": [
+    {
+      "esp_job_type": "NT_JOB",
+      "id": "CLAIMS_INTAKE",
+      "name": "CLAIMS_INTAKE",
+      "operator": "airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "NT_JOB",
+      "id": "CLAIMS_VALIDATE",
+      "name": "CLAIMS_VALIDATE",
+      "operator": "airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "NT_JOB",
+      "id": "CLAIMS_ADJUDICATE",
+      "name": "CLAIMS_ADJUDICATE",
+      "operator": "airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "NT_JOB",
+      "id": "CLAIMS_FRAUD_CHECK",
+      "name": "CLAIMS_FRAUD_CHECK",
+      "operator": "airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "NT_JOB",
+      "id": "CLAIMS_PAYMENT",
+      "name": "CLAIMS_PAYMENT",
+      "operator": "airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator",
+      "task_type": "bash",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "claims_windows"
+}

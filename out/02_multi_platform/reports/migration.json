@@ -1,0 +1,67 @@
+{
+  "applications": [
+    {
+      "colliding_id": false,
+      "custom_operators": [],
+      "dependency_count": 5,
+      "name": "CLAIMS_WINDOWS",
+      "operator_mix": {
+        "airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator": 5
+      },
+      "schedule": "0 20 * * *",
+      "schedule_status": "mapped",
+      "task_count": 5,
+      "unsupported_features": [],
+      "workflow_id": "claims_windows"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [],
+      "dependency_count": 6,
+      "name": "DATA_WAREHOUSE_ETL",
+      "operator_mix": {
+        "airflow.providers.ssh.operators.ssh.SSHOperator": 6
+      },
+      "schedule": "0 2 * * *",
+      "schedule_status": "mapped",
+      "task_count": 6,
+      "unsupported_features": [],
+      "workflow_id": "data_warehouse_etl"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.as400.AS400Operator"
+      ],
+      "dependency_count": 3,
+      "name": "LEGACY_POLICY_AS400",
+      "operator_mix": {
+        "custom_operators.as400.AS400Operator": 4
+      },
+      "schedule": "0 21 * * *",
+      "schedule_status": "mapped",
+      "task_count": 4,
+      "unsupported_features": [],
+      "workflow_id": "legacy_policy_as400"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [],
+      "dependency_count": 4,
+      "name": "RISK_ENGINE_AIX",
+      "operator_mix": {
+        "airflow.providers.ssh.operators.ssh.SSHOperator": 4
+      },
+      "schedule": "0 17 * * 1-5",
+      "schedule_status": "mapped",
+      "task_count": 4,
+      "unsupported_features": [],
+      "workflow_id": "risk_engine_aix"
+    }
+  ],
+  "colliding_dag_ids": [],
+  "custom_operators_required": {
+    "custom_operators.as400.AS400Operator": 4
+  },
+  "manual_review_count": 1
+}

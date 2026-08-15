@@ -1,0 +1,29 @@
+order_fulfillment:
+  description: ORDER_FULFILLMENT application
+  schedule: 0 7 * * *
+  catchup: false
+  default_args:
+    owner: maestro
+    start_date: '2024-01-01'
+  tasks:
+    pick_orders:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: PICK_ORDERS
+    pack_orders_zone_a:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: PACK_ORDERS_ZONE_A
+      pool: nw_0002
+      dependencies:
+      - pick_orders
+    pack_orders_zone_b:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: PACK_ORDERS_ZONE_B
+      pool: nw_0002
+      dependencies:
+      - pick_orders
+    ship_orders:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: SHIP_ORDERS
+      dependencies:
+      - pack_orders_zone_a
+      - pack_orders_zone_b

@@ -1,0 +1,38 @@
+clinical_trials_etl:
+  description: CLINICAL_TRIALS_ETL application
+  schedule: 0 1 * * *
+  catchup: false
+  default_args:
+    owner: clinical_svc
+    start_date: '2024-01-01'
+  tasks:
+    wait_inventory:
+      operator: airflow.providers.standard.sensors.external_task.ExternalTaskSensor
+      external_dag_id: drug_inventory
+      external_task_id: wait_inventory
+      mode: reschedule
+    extract_trial_data:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: LNX_CLINICAL_01
+      command: /opt/clinical/scripts/extract_trials.sh
+      dependencies:
+      - wait_inventory
+    analyze_efficacy:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: LNX_CLINICAL_01
+      command: /opt/clinical/scripts/efficacy_analysis.py
+      dependencies:
+      - extract_trial_data
+    analyze_safety:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: LNX_CLINICAL_02
+      command: /opt/clinical/scripts/safety_analysis.py
+      dependencies:
+      - extract_trial_data
+    trial_report:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: LNX_CLINICAL_01
+      command: /opt/clinical/scripts/generate_report.sh
+      dependencies:
+      - analyze_efficacy
+      - analyze_safety

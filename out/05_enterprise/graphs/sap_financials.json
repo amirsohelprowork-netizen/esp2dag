@@ -1,0 +1,113 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "SAP_POST_AP",
+      "kind": "success",
+      "resolved": true,
+      "to": "SAP_RECONCILE"
+    },
+    {
+      "condition": null,
+      "from": "SAP_POST_AR",
+      "kind": "success",
+      "resolved": true,
+      "to": "SAP_RECONCILE"
+    },
+    {
+      "condition": null,
+      "from": "SAP_POST_GL",
+      "kind": "success",
+      "resolved": true,
+      "to": "SAP_POST_AP"
+    },
+    {
+      "condition": null,
+      "from": "SAP_POST_GL",
+      "kind": "success",
+      "resolved": true,
+      "to": "SAP_POST_AR"
+    },
+    {
+      "condition": null,
+      "from": "SAP_RECONCILE",
+      "kind": "success",
+      "resolved": true,
+      "to": "SAP_FI_COMPLETE"
+    },
+    {
+      "condition": null,
+      "from": "WAIT_CORE_FOR_SAP",
+      "kind": "success",
+      "resolved": true,
+      "to": "SAP_POST_GL"
+    },
+    {
+      "condition": null,
+      "from": "WAIT_LENDING_FOR_SAP",
+      "kind": "success",
+      "resolved": true,
+      "to": "SAP_POST_GL"
+    }
+  ],
+  "name": "SAP_FINANCIALS",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "WAIT_CORE_FOR_SAP",
+      "name": "WAIT_CORE_FOR_SAP",
+      "operator": "airflow.providers.standard.sensors.external_task.ExternalTaskSensor",
+      "task_type": "sensor_external",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "WAIT_LENDING_FOR_SAP",
+      "name": "WAIT_LENDING_FOR_SAP",
+      "operator": "airflow.providers.standard.sensors.external_task.ExternalTaskSensor",
+      "task_type": "sensor_external",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "SAP_JOB",
+      "id": "SAP_POST_GL",
+      "name": "SAP_POST_GL",
+      "operator": "airflow.providers.sap.operators.sap_rfc.SapRfcOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "SAP_JOB",
+      "id": "SAP_POST_AR",
+      "name": "SAP_POST_AR",
+      "operator": "airflow.providers.sap.operators.sap_rfc.SapRfcOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "SAP_JOB",
+      "id": "SAP_POST_AP",
+      "name": "SAP_POST_AP",
+      "operator": "airflow.providers.sap.operators.sap_rfc.SapRfcOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "SAP_JOB",
+      "id": "SAP_RECONCILE",
+      "name": "SAP_RECONCILE",
+      "operator": "airflow.providers.sap.operators.sap_rfc.SapRfcOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "SAP_FI_COMPLETE",
+      "name": "SAP_FI_COMPLETE",
+      "operator": "airflow.providers.standard.operators.empty.EmptyOperator",
+      "task_type": "empty",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "sap_financials"
+}

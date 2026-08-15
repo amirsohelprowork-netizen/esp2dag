@@ -1,0 +1,42 @@
+market_risk_var:
+  description: MARKET_RISK_VAR application
+  schedule: 0 21 * * 1-5
+  catchup: false
+  default_args:
+    owner: riskengine
+    start_date: '2024-01-01'
+  tasks:
+    wait_settlement:
+      operator: airflow.providers.standard.sensors.external_task.ExternalTaskSensor
+      external_dag_id: trading_settlement
+      external_task_id: wait_settlement
+      mode: reschedule
+    mr_load_positions:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: AIX_RISK_PROD_01
+      command: /opt/risk/scripts/load_positions.ksh
+      dependencies:
+      - wait_settlement
+    mr_monte_carlo:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: AIX_RISK_PROD_01
+      command: /opt/risk/bin/mc_var_engine --iterations 500000 --confidence 0.99 --horizon 10d
+      pool: nw_0004
+      dependencies:
+      - mr_load_positions
+    mr_stress_test:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: AIX_RISK_PROD_02
+      command: /opt/risk/bin/stress_test_engine --scenarios /opt/risk/conf/stress_scenarios.json
+      dependencies:
+      - mr_monte_carlo
+    mr_aggregate_risk:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: AIX_RISK_PROD_01
+      command: /opt/risk/scripts/aggregate_risk_metrics.ksh
+      dependencies:
+      - mr_stress_test
+    mr_risk_complete:
+      operator: airflow.providers.standard.operators.empty.EmptyOperator
+      dependencies:
+      - mr_aggregate_risk

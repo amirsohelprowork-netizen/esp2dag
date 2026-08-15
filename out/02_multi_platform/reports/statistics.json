@@ -1,0 +1,24 @@
+{
+  "errors": 0,
+  "failed_conversions": 0,
+  "mapped_schedules": 4,
+  "operator_mix": {
+    "airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator": 5,
+    "airflow.providers.ssh.operators.ssh.SSHOperator": 10,
+    "custom_operators.as400.AS400Operator": 4
+  },
+  "schedule_samples": {
+    "0 17 * * 1-5": 1,
+    "0 2 * * *": 1,
+    "0 20 * * *": 1,
+    "0 21 * * *": 1
+  },
+  "successful_conversions": 4,
+  "total_applications": 4,
+  "total_dependencies": 18,
+  "total_events": 4,
+  "total_jobs": 19,
+  "unmapped_or_partial_schedules": 0,
+  "unsupported_features": 0,
+  "warnings": 8
+}

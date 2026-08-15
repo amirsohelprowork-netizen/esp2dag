@@ -1,0 +1,37 @@
+claims_windows:
+  description: CLAIMS_WINDOWS application
+  schedule: 0 20 * * *
+  catchup: false
+  default_args:
+    owner: svc_claims
+    start_date: '2024-01-01'
+  tasks:
+    claims_intake:
+      operator: airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator
+      ssh_conn_id: WIN_CLAIMS_01
+      command: D:\ClaimsApp\bin\intake_processor.bat
+    claims_validate:
+      operator: airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator
+      ssh_conn_id: WIN_CLAIMS_01
+      command: D:\ClaimsApp\bin\validate_claims.exe
+      dependencies:
+      - claims_intake
+    claims_adjudicate:
+      operator: airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator
+      ssh_conn_id: WIN_CLAIMS_02
+      command: D:\ClaimsApp\bin\adjudicate.bat
+      dependencies:
+      - claims_validate
+    claims_fraud_check:
+      operator: airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator
+      ssh_conn_id: WIN_CLAIMS_02
+      command: D:\FraudDetection\run_check.ps1
+      dependencies:
+      - claims_validate
+    claims_payment:
+      operator: airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator
+      ssh_conn_id: WIN_CLAIMS_01
+      command: D:\PaymentGateway\process_payments.bat
+      dependencies:
+      - claims_adjudicate
+      - claims_fraud_check

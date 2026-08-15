@@ -1,0 +1,21 @@
+%% workflow: gl_posting
+flowchart TD
+  GL_INITIALIZE["GL_INITIALIZE<br/>JOB"]
+  GL_POST_AR["GL_POST_AR<br/>JOB"]
+  GL_POST_AP["GL_POST_AP<br/>JOB"]
+  GL_POST_PAYROLL["GL_POST_PAYROLL<br/>JOB"]
+  GL_CONSOLIDATE["GL_CONSOLIDATE<br/>JOB"]
+  GL_BALANCE_CHECK["GL_BALANCE_CHECK<br/>JOB"]
+  GL_CONSOLIDATE --> GL_BALANCE_CHECK
+  GL_INITIALIZE --> GL_POST_AP
+  GL_INITIALIZE --> GL_POST_AR
+  GL_INITIALIZE --> GL_POST_PAYROLL
+  GL_POST_AP --> GL_CONSOLIDATE
+  GL_POST_AR --> GL_CONSOLIDATE
+  GL_POST_PAYROLL --> GL_CONSOLIDATE
+  %% GL_INITIALIZE -> MainframeSubmitJobOperator
+  %% GL_POST_AR -> MainframeSubmitJobOperator
+  %% GL_POST_AP -> MainframeSubmitJobOperator
+  %% GL_POST_PAYROLL -> MainframeSubmitJobOperator
+  %% GL_CONSOLIDATE -> MainframeSubmitJobOperator
+  %% GL_BALANCE_CHECK -> MainframeSubmitJobOperator

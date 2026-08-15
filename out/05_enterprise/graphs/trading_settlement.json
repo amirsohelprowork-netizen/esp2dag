@@ -1,0 +1,121 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "TS_CALC_SETTLEMENT",
+      "kind": "success",
+      "resolved": true,
+      "to": "TS_DELIVER_SECURITIES"
+    },
+    {
+      "condition": null,
+      "from": "TS_CALC_SETTLEMENT",
+      "kind": "success",
+      "resolved": true,
+      "to": "TS_PROCESS_FAILS"
+    },
+    {
+      "condition": null,
+      "from": "TS_DELIVER_SECURITIES",
+      "kind": "success",
+      "resolved": true,
+      "to": "TS_RECONCILE_POSITIONS"
+    },
+    {
+      "condition": null,
+      "from": "TS_MATCH_TRADES",
+      "kind": "success",
+      "resolved": true,
+      "to": "TS_CALC_SETTLEMENT"
+    },
+    {
+      "condition": null,
+      "from": "TS_RECONCILE_POSITIONS",
+      "kind": "success",
+      "resolved": true,
+      "to": "TS_SETTLEMENT_COMPLETE"
+    },
+    {
+      "condition": null,
+      "from": "WAIT_CORE_FOR_SETTLE",
+      "kind": "success",
+      "resolved": true,
+      "to": "TS_MATCH_TRADES"
+    },
+    {
+      "condition": null,
+      "from": "WAIT_MARKET_DATA",
+      "kind": "success",
+      "resolved": true,
+      "to": "TS_MATCH_TRADES"
+    }
+  ],
+  "name": "TRADING_SETTLEMENT",
+  "nodes": [
+    {
+      "esp_job_type": "DSTRIG",
+      "id": "WAIT_MARKET_DATA",
+      "name": "WAIT_MARKET_DATA",
+      "operator": "custom_operators.mainframe.MainframeDatasetSensor",
+      "task_type": "sensor_file",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "WAIT_CORE_FOR_SETTLE",
+      "name": "WAIT_CORE_FOR_SETTLE",
+      "operator": "airflow.providers.standard.sensors.external_task.ExternalTaskSensor",
+      "task_type": "sensor_external",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "TS_MATCH_TRADES",
+      "name": "TS_MATCH_TRADES",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "TS_CALC_SETTLEMENT",
+      "name": "TS_CALC_SETTLEMENT",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "TS_PROCESS_FAILS",
+      "name": "TS_PROCESS_FAILS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "UNIX_JOB",
+      "id": "TS_DELIVER_SECURITIES",
+      "name": "TS_DELIVER_SECURITIES",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "UNIX_JOB",
+      "id": "TS_RECONCILE_POSITIONS",
+      "name": "TS_RECONCILE_POSITIONS",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "TS_SETTLEMENT_COMPLETE",
+      "name": "TS_SETTLEMENT_COMPLETE",
+      "operator": "airflow.providers.standard.operators.empty.EmptyOperator",
+      "task_type": "empty",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "trading_settlement"
+}

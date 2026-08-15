@@ -1,0 +1,43 @@
+data_warehouse_etl:
+  description: DATA_WAREHOUSE_ETL application
+  schedule: 0 2 * * *
+  catchup: false
+  default_args:
+    owner: etl_svc
+    start_date: '2024-01-01'
+  tasks:
+    stage_raw_data:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: LNX_ETL_01
+      command: /opt/etl/scripts/stage_raw_data.sh
+    transform_dimensions:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: LNX_ETL_01
+      command: /opt/etl/scripts/transform_dims.sh
+      dependencies:
+      - stage_raw_data
+    transform_facts:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: LNX_ETL_02
+      command: /opt/etl/scripts/transform_facts.sh
+      dependencies:
+      - stage_raw_data
+    load_warehouse:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: LNX_ETL_01
+      command: /opt/etl/scripts/load_warehouse.sh
+      dependencies:
+      - transform_dimensions
+      - transform_facts
+    build_cubes:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: LNX_ETL_02
+      command: /opt/etl/bin/cube_builder --config /opt/etl/conf/cubes.yaml --parallel 8
+      dependencies:
+      - load_warehouse
+    refresh_dashboards:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: LNX_ETL_01
+      command: /opt/etl/scripts/refresh_tableau.sh
+      dependencies:
+      - build_cubes

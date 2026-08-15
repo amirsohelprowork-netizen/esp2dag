@@ -1,0 +1,31 @@
+risk_engine_aix:
+  description: RISK_ENGINE_AIX application
+  schedule: 0 17 * * 1-5
+  catchup: false
+  default_args:
+    owner: riskuser
+    start_date: '2024-01-01'
+  tasks:
+    load_market_data:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: AIX_RISK_01
+      command: /opt/risk/scripts/load_market_data.ksh
+    calc_var:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: AIX_RISK_01
+      command: /opt/risk/bin/var_engine --model montecarlo --iterations 100000
+      dependencies:
+      - load_market_data
+    calc_credit_risk:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: AIX_RISK_02
+      command: /opt/risk/bin/credit_risk_engine --portfolio ALL --horizon 1Y
+      dependencies:
+      - load_market_data
+    aggregate_risk:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: AIX_RISK_01
+      command: /opt/risk/scripts/aggregate_reports.ksh
+      dependencies:
+      - calc_credit_risk
+      - calc_var

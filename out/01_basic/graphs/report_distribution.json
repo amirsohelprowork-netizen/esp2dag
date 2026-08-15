@@ -1,0 +1,61 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "BUILD_DAILY_SUMMARY",
+      "kind": "success",
+      "resolved": true,
+      "to": "ARCHIVE_REPORTS"
+    },
+    {
+      "condition": null,
+      "from": "BUILD_DAILY_SUMMARY",
+      "kind": "success",
+      "resolved": true,
+      "to": "PRINT_BRANCH_REPORTS"
+    },
+    {
+      "condition": null,
+      "from": "BUILD_DAILY_SUMMARY",
+      "kind": "success",
+      "resolved": true,
+      "to": "PRINT_EXEC_SUMMARY"
+    }
+  ],
+  "name": "REPORT_DISTRIBUTION",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "BUILD_DAILY_SUMMARY",
+      "name": "BUILD_DAILY_SUMMARY",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "PRINT_BRANCH_REPORTS",
+      "name": "PRINT_BRANCH_REPORTS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "PRINT_EXEC_SUMMARY",
+      "name": "PRINT_EXEC_SUMMARY",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "ARCHIVE_REPORTS",
+      "name": "ARCHIVE_REPORTS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "report_distribution"
+}

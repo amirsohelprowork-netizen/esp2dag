@@ -1,0 +1,61 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "CALC_PREMIUMS",
+      "kind": "success",
+      "resolved": true,
+      "to": "GENERATE_NOTICES"
+    },
+    {
+      "condition": null,
+      "from": "CALC_PREMIUMS",
+      "kind": "success",
+      "resolved": true,
+      "to": "UPDATE_POLICY_DB"
+    },
+    {
+      "condition": null,
+      "from": "EXTRACT_POLICIES",
+      "kind": "success",
+      "resolved": true,
+      "to": "CALC_PREMIUMS"
+    }
+  ],
+  "name": "LEGACY_POLICY_AS400",
+  "nodes": [
+    {
+      "esp_job_type": "AS400_JOB",
+      "id": "EXTRACT_POLICIES",
+      "name": "EXTRACT_POLICIES",
+      "operator": "custom_operators.as400.AS400Operator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "AS400_JOB",
+      "id": "CALC_PREMIUMS",
+      "name": "CALC_PREMIUMS",
+      "operator": "custom_operators.as400.AS400Operator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "AS400_JOB",
+      "id": "UPDATE_POLICY_DB",
+      "name": "UPDATE_POLICY_DB",
+      "operator": "custom_operators.as400.AS400Operator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "AS400_JOB",
+      "id": "GENERATE_NOTICES",
+      "name": "GENERATE_NOTICES",
+      "operator": "custom_operators.as400.AS400Operator",
+      "task_type": "bash",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "legacy_policy_as400"
+}

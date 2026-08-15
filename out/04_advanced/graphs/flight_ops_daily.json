@@ -1,0 +1,113 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "CATERING_ORDERS",
+      "kind": "success",
+      "resolved": true,
+      "to": "DISPATCH_BRIEFING"
+    },
+    {
+      "condition": null,
+      "from": "CREW_SCHEDULING",
+      "kind": "success",
+      "resolved": true,
+      "to": "GATE_ASSIGNMENTS"
+    },
+    {
+      "condition": null,
+      "from": "DISPATCH_BRIEFING",
+      "kind": "success",
+      "resolved": true,
+      "to": "OPS_COMPLETE"
+    },
+    {
+      "condition": null,
+      "from": "FUEL_PLANNING",
+      "kind": "success",
+      "resolved": true,
+      "to": "DISPATCH_BRIEFING"
+    },
+    {
+      "condition": null,
+      "from": "GATE_ASSIGNMENTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "CATERING_ORDERS"
+    },
+    {
+      "condition": null,
+      "from": "GATE_ASSIGNMENTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "FUEL_PLANNING"
+    },
+    {
+      "condition": null,
+      "from": "WEEKLY_OPS_ANALYSIS",
+      "kind": "success",
+      "resolved": true,
+      "to": "OPS_COMPLETE"
+    }
+  ],
+  "name": "FLIGHT_OPS_DAILY",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "CREW_SCHEDULING",
+      "name": "CREW_SCHEDULING",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "GATE_ASSIGNMENTS",
+      "name": "GATE_ASSIGNMENTS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "FUEL_PLANNING",
+      "name": "FUEL_PLANNING",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "CATERING_ORDERS",
+      "name": "CATERING_ORDERS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "DISPATCH_BRIEFING",
+      "name": "DISPATCH_BRIEFING",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "WEEKLY_OPS_ANALYSIS",
+      "name": "WEEKLY_OPS_ANALYSIS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "OPS_COMPLETE",
+      "name": "OPS_COMPLETE",
+      "operator": "airflow.providers.standard.operators.empty.EmptyOperator",
+      "task_type": "empty",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "flight_ops_daily"
+}

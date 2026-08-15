@@ -1,0 +1,91 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "MR_AGGREGATE_RISK",
+      "kind": "success",
+      "resolved": true,
+      "to": "MR_RISK_COMPLETE"
+    },
+    {
+      "condition": null,
+      "from": "MR_LOAD_POSITIONS",
+      "kind": "success",
+      "resolved": true,
+      "to": "MR_MONTE_CARLO"
+    },
+    {
+      "condition": null,
+      "from": "MR_MONTE_CARLO",
+      "kind": "success",
+      "resolved": true,
+      "to": "MR_STRESS_TEST"
+    },
+    {
+      "condition": null,
+      "from": "MR_STRESS_TEST",
+      "kind": "success",
+      "resolved": true,
+      "to": "MR_AGGREGATE_RISK"
+    },
+    {
+      "condition": null,
+      "from": "WAIT_SETTLEMENT",
+      "kind": "success",
+      "resolved": true,
+      "to": "MR_LOAD_POSITIONS"
+    }
+  ],
+  "name": "MARKET_RISK_VAR",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "WAIT_SETTLEMENT",
+      "name": "WAIT_SETTLEMENT",
+      "operator": "airflow.providers.standard.sensors.external_task.ExternalTaskSensor",
+      "task_type": "sensor_external",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "AIX_JOB",
+      "id": "MR_LOAD_POSITIONS",
+      "name": "MR_LOAD_POSITIONS",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "AIX_JOB",
+      "id": "MR_MONTE_CARLO",
+      "name": "MR_MONTE_CARLO",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "AIX_JOB",
+      "id": "MR_STRESS_TEST",
+      "name": "MR_STRESS_TEST",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "AIX_JOB",
+      "id": "MR_AGGREGATE_RISK",
+      "name": "MR_AGGREGATE_RISK",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "MR_RISK_COMPLETE",
+      "name": "MR_RISK_COMPLETE",
+      "operator": "airflow.providers.standard.operators.empty.EmptyOperator",
+      "task_type": "empty",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "market_risk_var"
+}

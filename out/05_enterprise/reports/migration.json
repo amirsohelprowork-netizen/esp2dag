@@ -1,0 +1,206 @@
+{
+  "applications": [
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.as400.AS400Operator"
+      ],
+      "dependency_count": 3,
+      "name": "AS400_LEGACY_FEEDS",
+      "operator_mix": {
+        "custom_operators.as400.AS400Operator": 4
+      },
+      "schedule": "0 17 * * *",
+      "schedule_status": "mapped",
+      "task_count": 4,
+      "unsupported_features": [],
+      "workflow_id": "as400_legacy_feeds"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeSubmitJobOperator"
+      ],
+      "dependency_count": 14,
+      "name": "CORE_BANKING_EOD",
+      "operator_mix": {
+        "airflow.providers.standard.operators.empty.EmptyOperator": 1,
+        "custom_operators.mainframe.MainframeSubmitJobOperator": 11
+      },
+      "schedule": "30 18 * * 1-5",
+      "schedule_status": "mapped",
+      "task_count": 12,
+      "unsupported_features": [],
+      "workflow_id": "core_banking_eod"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeSubmitJobOperator"
+      ],
+      "dependency_count": 7,
+      "name": "CREDIT_RISK_BATCH",
+      "operator_mix": {
+        "airflow.providers.ssh.operators.ssh.SSHOperator": 3,
+        "airflow.providers.standard.operators.empty.EmptyOperator": 1,
+        "airflow.providers.standard.sensors.external_task.ExternalTaskSensor": 1,
+        "custom_operators.mainframe.MainframeSubmitJobOperator": 2
+      },
+      "schedule": "0 22 * * 1-5",
+      "schedule_status": "mapped",
+      "task_count": 7,
+      "unsupported_features": [],
+      "workflow_id": "credit_risk_batch"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeDatasetSensor"
+      ],
+      "dependency_count": 8,
+      "name": "DATA_LAKE_INGESTION",
+      "operator_mix": {
+        "airflow.providers.ssh.operators.ssh.SSHOperator": 5,
+        "airflow.providers.standard.operators.empty.EmptyOperator": 1,
+        "airflow.providers.standard.sensors.external_task.ExternalTaskSensor": 2,
+        "custom_operators.mainframe.MainframeDatasetSensor": 1
+      },
+      "schedule": "0 1 * * *",
+      "schedule_status": "mapped",
+      "task_count": 9,
+      "unsupported_features": [],
+      "workflow_id": "data_lake_ingestion"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeSubmitJobOperator"
+      ],
+      "dependency_count": 8,
+      "name": "LENDING_BATCH",
+      "operator_mix": {
+        "airflow.providers.standard.operators.empty.EmptyOperator": 1,
+        "airflow.providers.standard.sensors.external_task.ExternalTaskSensor": 1,
+        "custom_operators.mainframe.MainframeSubmitJobOperator": 6
+      },
+      "schedule": "0 20 * * 1-5",
+      "schedule_status": "mapped",
+      "task_count": 8,
+      "unsupported_features": [],
+      "workflow_id": "lending_batch"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [],
+      "dependency_count": 5,
+      "name": "MARKET_RISK_VAR",
+      "operator_mix": {
+        "airflow.providers.ssh.operators.ssh.SSHOperator": 4,
+        "airflow.providers.standard.operators.empty.EmptyOperator": 1,
+        "airflow.providers.standard.sensors.external_task.ExternalTaskSensor": 1
+      },
+      "schedule": "0 21 * * 1-5",
+      "schedule_status": "mapped",
+      "task_count": 6,
+      "unsupported_features": [],
+      "workflow_id": "market_risk_var"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeSubmitJobOperator"
+      ],
+      "dependency_count": 10,
+      "name": "MONTH_END_CLOSE",
+      "operator_mix": {
+        "airflow.providers.sap.operators.sap_rfc.SapRfcOperator": 1,
+        "airflow.providers.standard.operators.empty.EmptyOperator": 1,
+        "airflow.providers.standard.sensors.external_task.ExternalTaskSensor": 2,
+        "custom_operators.mainframe.MainframeSubmitJobOperator": 6
+      },
+      "schedule": "19.00 LAST WORKDAY OF MONTH",
+      "schedule_status": "partial",
+      "task_count": 10,
+      "unsupported_features": [],
+      "workflow_id": "month_end_close"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeSubmitJobOperator"
+      ],
+      "dependency_count": 8,
+      "name": "REGULATORY_CAPITAL",
+      "operator_mix": {
+        "airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator": 1,
+        "airflow.providers.sap.operators.sap_rfc.SapRfcOperator": 1,
+        "airflow.providers.ssh.operators.ssh.SSHOperator": 2,
+        "custom_operators.mainframe.MainframeSubmitJobOperator": 4
+      },
+      "schedule": "08.00 1ST WORKDAY OF QUARTER",
+      "schedule_status": "partial",
+      "task_count": 8,
+      "unsupported_features": [],
+      "workflow_id": "regulatory_capital"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [],
+      "dependency_count": 7,
+      "name": "SAP_FINANCIALS",
+      "operator_mix": {
+        "airflow.providers.sap.operators.sap_rfc.SapRfcOperator": 4,
+        "airflow.providers.standard.operators.empty.EmptyOperator": 1,
+        "airflow.providers.standard.sensors.external_task.ExternalTaskSensor": 2
+      },
+      "schedule": "0 23 * * 1-5",
+      "schedule_status": "mapped",
+      "task_count": 7,
+      "unsupported_features": [],
+      "workflow_id": "sap_financials"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeDatasetSensor",
+        "custom_operators.mainframe.MainframeSubmitJobOperator"
+      ],
+      "dependency_count": 7,
+      "name": "TRADING_SETTLEMENT",
+      "operator_mix": {
+        "airflow.providers.ssh.operators.ssh.SSHOperator": 2,
+        "airflow.providers.standard.operators.empty.EmptyOperator": 1,
+        "airflow.providers.standard.sensors.external_task.ExternalTaskSensor": 1,
+        "custom_operators.mainframe.MainframeDatasetSensor": 1,
+        "custom_operators.mainframe.MainframeSubmitJobOperator": 3
+      },
+      "schedule": "0 19 * * 1-5",
+      "schedule_status": "mapped",
+      "task_count": 8,
+      "unsupported_features": [],
+      "workflow_id": "trading_settlement"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [],
+      "dependency_count": 8,
+      "name": "WINDOWS_REPORTING",
+      "operator_mix": {
+        "airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator": 5,
+        "airflow.providers.standard.sensors.external_task.ExternalTaskSensor": 2
+      },
+      "schedule": "0 4 * * 1-5",
+      "schedule_status": "mapped",
+      "task_count": 7,
+      "unsupported_features": [],
+      "workflow_id": "windows_reporting"
+    }
+  ],
+  "colliding_dag_ids": [],
+  "custom_operators_required": {
+    "custom_operators.as400.AS400Operator": 4,
+    "custom_operators.mainframe.MainframeDatasetSensor": 2,
+    "custom_operators.mainframe.MainframeSubmitJobOperator": 32
+  },
+  "manual_review_count": 8
+}

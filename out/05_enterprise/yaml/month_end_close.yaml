@@ -1,0 +1,66 @@
+month_end_close:
+  description: MONTH_END_CLOSE application
+  catchup: false
+  default_args:
+    owner: maestro
+    start_date: '2024-01-01'
+  tasks:
+    wait_all_daily_core:
+      operator: airflow.providers.standard.sensors.external_task.ExternalTaskSensor
+      external_dag_id: core_banking_eod
+      external_task_id: wait_all_daily_core
+      mode: reschedule
+    wait_all_daily_sap:
+      operator: airflow.providers.standard.sensors.external_task.ExternalTaskSensor
+      external_dag_id: sap_financials
+      external_task_id: wait_all_daily_sap
+      mode: reschedule
+    me_freeze_accounts:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: ME_FREEZE_ACCOUNTS
+      ccchk: (0)
+      dependencies:
+      - wait_all_daily_core
+      - wait_all_daily_sap
+    me_accrue_interest:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: ME_ACCRUE_INTEREST
+      dependencies:
+      - me_freeze_accounts
+    me_accrue_expenses:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: ME_ACCRUE_EXPENSES
+      dependencies:
+      - me_freeze_accounts
+    me_trial_balance:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: ME_TRIAL_BALANCE
+      ccchk: (0)
+      dependencies:
+      - me_accrue_expenses
+      - me_accrue_interest
+    me_intercompany_elim:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: ME_INTERCOMPANY_ELIM
+      dependencies:
+      - me_trial_balance
+    me_consolidation:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: ME_CONSOLIDATION
+      ccchk: (0)
+      dependencies:
+      - me_intercompany_elim
+    me_post_to_sap:
+      operator: airflow.providers.sap.operators.sap_rfc.SapRfcOperator
+      conn_id: SAP_PROD_01
+      abap_name: RGGBS000
+      variant: MONTH_END_CLOSE
+      sap_job_name: FI_MONTH_CLOSE
+      sap_job_class: A
+      step_user: BATCHFI
+      dependencies:
+      - me_consolidation
+    me_close_complete:
+      operator: airflow.providers.standard.operators.empty.EmptyOperator
+      dependencies:
+      - me_post_to_sap

@@ -1,0 +1,83 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "CALC_POINTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "GENERATE_STATEMENTS"
+    },
+    {
+      "condition": null,
+      "from": "CALC_POINTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "UPDATE_TIER_STATUS"
+    },
+    {
+      "condition": null,
+      "from": "EXTRACT_MEMBER_ACTIVITY",
+      "kind": "success",
+      "resolved": true,
+      "to": "CALC_POINTS"
+    },
+    {
+      "condition": null,
+      "from": "GENERATE_STATEMENTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "LOYALTY_COMPLETE"
+    },
+    {
+      "condition": null,
+      "from": "UPDATE_TIER_STATUS",
+      "kind": "success",
+      "resolved": true,
+      "to": "LOYALTY_COMPLETE"
+    }
+  ],
+  "name": "LOYALTY_BIWEEKLY",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "EXTRACT_MEMBER_ACTIVITY",
+      "name": "EXTRACT_MEMBER_ACTIVITY",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "LINUX_JOB",
+      "id": "CALC_POINTS",
+      "name": "CALC_POINTS",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "LINUX_JOB",
+      "id": "UPDATE_TIER_STATUS",
+      "name": "UPDATE_TIER_STATUS",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "GENERATE_STATEMENTS",
+      "name": "GENERATE_STATEMENTS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "LOYALTY_COMPLETE",
+      "name": "LOYALTY_COMPLETE",
+      "operator": "airflow.providers.standard.operators.empty.EmptyOperator",
+      "task_type": "empty",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "loyalty_biweekly"
+}

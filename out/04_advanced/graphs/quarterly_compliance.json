@@ -1,0 +1,83 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "COMPILE_QUARTERLY_REPORT",
+      "kind": "success",
+      "resolved": true,
+      "to": "SUBMIT_TO_FAA"
+    },
+    {
+      "condition": null,
+      "from": "EXTRACT_QUARTERLY_DATA",
+      "kind": "success",
+      "resolved": true,
+      "to": "SAFETY_AUDIT"
+    },
+    {
+      "condition": null,
+      "from": "EXTRACT_QUARTERLY_DATA",
+      "kind": "success",
+      "resolved": true,
+      "to": "STANDARD_AUDIT"
+    },
+    {
+      "condition": null,
+      "from": "SAFETY_AUDIT",
+      "kind": "success",
+      "resolved": true,
+      "to": "COMPILE_QUARTERLY_REPORT"
+    },
+    {
+      "condition": null,
+      "from": "STANDARD_AUDIT",
+      "kind": "success",
+      "resolved": true,
+      "to": "COMPILE_QUARTERLY_REPORT"
+    }
+  ],
+  "name": "QUARTERLY_COMPLIANCE",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "EXTRACT_QUARTERLY_DATA",
+      "name": "EXTRACT_QUARTERLY_DATA",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "STANDARD_AUDIT",
+      "name": "STANDARD_AUDIT",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "SAFETY_AUDIT",
+      "name": "SAFETY_AUDIT",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "COMPILE_QUARTERLY_REPORT",
+      "name": "COMPILE_QUARTERLY_REPORT",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "SUBMIT_TO_FAA",
+      "name": "SUBMIT_TO_FAA",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "quarterly_compliance"
+}

@@ -1,0 +1,48 @@
+credit_risk_batch:
+  description: CREDIT_RISK_BATCH application
+  schedule: 0 22 * * 1-5
+  catchup: false
+  default_args:
+    owner: riskengine
+    start_date: '2024-01-01'
+  tasks:
+    wait_core_for_credit:
+      operator: airflow.providers.standard.sensors.external_task.ExternalTaskSensor
+      external_dag_id: core_banking_eod
+      external_task_id: wait_core_for_credit
+      mode: reschedule
+    cr_extract_exposures:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: CR_EXTRACT_EXPOSURES
+      dependencies:
+      - wait_core_for_credit
+    cr_calc_pd:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: AIX_RISK_PROD_01
+      command: /opt/risk/bin/pd_model --model logistic --vintage 12m
+      dependencies:
+      - cr_extract_exposures
+    cr_calc_lgd:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: AIX_RISK_PROD_02
+      command: /opt/risk/bin/lgd_model --recovery workout --horizon 3y
+      dependencies:
+      - cr_extract_exposures
+    cr_simulate_defaults:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: AIX_RISK_PROD_01
+      command: /opt/risk/bin/default_simulator --correlations /opt/risk/conf/correlation_matrix.dat
+      pool: nw_0003
+      dependencies:
+      - cr_calc_lgd
+      - cr_calc_pd
+    cr_provision_calc:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: CR_PROVISION_CALC
+      ccchk: (0)
+      dependencies:
+      - cr_simulate_defaults
+    cr_risk_complete:
+      operator: airflow.providers.standard.operators.empty.EmptyOperator
+      dependencies:
+      - cr_provision_calc

@@ -1,0 +1,40 @@
+flight_ops_daily:
+  description: FLIGHT_OPS_DAILY application
+  schedule: 0 4,22 * * *
+  catchup: false
+  default_args:
+    owner: maestro
+    start_date: '2024-01-01'
+  tasks:
+    crew_scheduling:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: CREW_SCHEDULING
+    gate_assignments:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: GATE_ASSIGNMENTS
+      dependencies:
+      - crew_scheduling
+    fuel_planning:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: FUEL_PLANNING
+      dependencies:
+      - gate_assignments
+    catering_orders:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: CATERING_ORDERS
+      dependencies:
+      - gate_assignments
+    dispatch_briefing:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: DISPATCH_BRIEFING
+      dependencies:
+      - catering_orders
+      - fuel_planning
+    weekly_ops_analysis:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: WEEKLY_OPS_ANALYSIS
+    ops_complete:
+      operator: airflow.providers.standard.operators.empty.EmptyOperator
+      dependencies:
+      - dispatch_briefing
+      - weekly_ops_analysis

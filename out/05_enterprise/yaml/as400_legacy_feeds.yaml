@@ -1,0 +1,38 @@
+as400_legacy_feeds:
+  description: AS400_LEGACY_FEEDS application
+  schedule: 0 17 * * *
+  catchup: false
+  default_args:
+    owner: QSECOFR
+    start_date: '2024-01-01'
+  tasks:
+    as4_extract_customers:
+      operator: custom_operators.as400.AS400Operator
+      conn_id: AS400_FINANCE_01_AS400
+      command: CALL PGM(FINLIB/CUSTEXT) PARM(DAILY PROD)
+      job_queue: QBATCH
+      pool: nw_0001
+    as4_extract_accounts:
+      operator: custom_operators.as400.AS400Operator
+      conn_id: AS400_FINANCE_01_AS400
+      command: CALL PGM(FINLIB/ACCTEXT) PARM(DAILY PROD)
+      job_queue: QBATCH
+      pool: AS400_FINANCE_01
+      dependencies:
+      - as4_extract_customers
+    as4_transform_data:
+      operator: custom_operators.as400.AS400Operator
+      conn_id: AS400_FINANCE_01_AS400
+      command: CALL PGM(FINLIB/XFORMDAT) PARM(FULL)
+      job_queue: QBATCH
+      pool: AS400_FINANCE_01
+      dependencies:
+      - as4_extract_accounts
+    as4_send_to_mq:
+      operator: custom_operators.as400.AS400Operator
+      conn_id: AS400_FINANCE_01_AS400
+      command: CALL PGM(FINLIB/MQSEND) PARM(PROD.QUEUE.LEGACY)
+      job_queue: QBATCH
+      pool: AS400_FINANCE_01
+      dependencies:
+      - as4_transform_data

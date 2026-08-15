@@ -1,0 +1,268 @@
+{
+  "by_code": {
+    "E405": 8,
+    "W300": 11,
+    "W400": 11,
+    "W501": 1
+  },
+  "by_severity": {
+    "WARNING": 31
+  },
+  "by_stage": {
+    "event_merger": 1,
+    "parser": 11,
+    "semantic": 19
+  },
+  "diagnostic_samples": [
+    {
+      "application": "CORE_BANKING_EOD",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "CORE_BANKING_EOD",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "LENDING_BATCH",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "LENDING_BATCH",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "TRADING_SETTLEMENT",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "TRADING_SETTLEMENT",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "MARKET_RISK_VAR",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "MARKET_RISK_VAR",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "CREDIT_RISK_BATCH",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "CREDIT_RISK_BATCH",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "SAP_FINANCIALS",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "SAP_FINANCIALS",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "WINDOWS_REPORTING",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "WINDOWS_REPORTING",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "DATA_LAKE_INGESTION",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "DATA_LAKE_INGESTION",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "MONTH_END_CLOSE",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "MONTH_END_CLOSE",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "REGULATORY_CAPITAL",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "REGULATORY_CAPITAL",
+      "code": "E405",
+      "job": "RC_EXTRACT_POSITIONS",
+      "message": "Job 'RC_EXTRACT_POSITIONS' RUN expression '1ST WORKDAY OF QUARTER' uses unrecognized schedule token '1ST'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "REGULATORY_CAPITAL",
+      "code": "E405",
+      "job": "RC_EXTRACT_RISK_WEIGHTS",
+      "message": "Job 'RC_EXTRACT_RISK_WEIGHTS' RUN expression '1ST WORKDAY OF QUARTER' uses unrecognized schedule token '1ST'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "REGULATORY_CAPITAL",
+      "code": "E405",
+      "job": "RC_CALC_RWA",
+      "message": "Job 'RC_CALC_RWA' RUN expression '1ST WORKDAY OF QUARTER' uses unrecognized schedule token '1ST'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "REGULATORY_CAPITAL",
+      "code": "E405",
+      "job": "RC_CALC_CAPITAL_RATIO",
+      "message": "Job 'RC_CALC_CAPITAL_RATIO' RUN expression '1ST WORKDAY OF QUARTER' uses unrecognized schedule token '1ST'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "REGULATORY_CAPITAL",
+      "code": "E405",
+      "job": "RC_BUILD_SUBMISSION",
+      "message": "Job 'RC_BUILD_SUBMISSION' RUN expression '1ST WORKDAY OF QUARTER' uses unrecognized schedule token '1ST'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "REGULATORY_CAPITAL",
+      "code": "E405",
+      "job": "RC_SAP_POST_CAPITAL",
+      "message": "Job 'RC_SAP_POST_CAPITAL' RUN expression '1ST WORKDAY OF QUARTER' uses unrecognized schedule token '1ST'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "REGULATORY_CAPITAL",
+      "code": "E405",
+      "job": "RC_GENERATE_BOARD_REPORT",
+      "message": "Job 'RC_GENERATE_BOARD_REPORT' RUN expression '1ST WORKDAY OF QUARTER' uses unrecognized schedule token '1ST'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "REGULATORY_CAPITAL",
+      "code": "E405",
+      "job": "RC_SUBMIT_TO_REGULATOR",
+      "message": "Job 'RC_SUBMIT_TO_REGULATOR' RUN expression '1ST WORKDAY OF QUARTER' uses unrecognized schedule token '1ST'.",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "REGULATORY_CAPITAL",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "AS400_LEGACY_FEEDS",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "AS400_LEGACY_FEEDS",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": null,
+      "code": "W501",
+      "job": null,
+      "message": "Event 'PROD.SAP_EXTRACT_FILE' did not match any compiled application in this run.",
+      "severity": "WARNING",
+      "stage": "event_merger"
+    }
+  ],
+  "failed_units": [],
+  "has_errors": false
+}

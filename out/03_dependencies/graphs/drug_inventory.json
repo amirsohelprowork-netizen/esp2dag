@@ -1,0 +1,83 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "FLAG_EXPIRING_DRUGS",
+      "kind": "success",
+      "resolved": true,
+      "to": "INVENTORY_COMPLETE"
+    },
+    {
+      "condition": null,
+      "from": "UPDATE_STOCK_LEVELS",
+      "kind": "success",
+      "resolved": true,
+      "to": "INVENTORY_COMPLETE"
+    },
+    {
+      "condition": null,
+      "from": "VALIDATE_INVENTORY",
+      "kind": "success",
+      "resolved": true,
+      "to": "FLAG_EXPIRING_DRUGS"
+    },
+    {
+      "condition": null,
+      "from": "VALIDATE_INVENTORY",
+      "kind": "success",
+      "resolved": true,
+      "to": "UPDATE_STOCK_LEVELS"
+    },
+    {
+      "condition": null,
+      "from": "WAIT_INVENTORY_FEED",
+      "kind": "success",
+      "resolved": true,
+      "to": "VALIDATE_INVENTORY"
+    }
+  ],
+  "name": "DRUG_INVENTORY",
+  "nodes": [
+    {
+      "esp_job_type": "DSTRIG",
+      "id": "WAIT_INVENTORY_FEED",
+      "name": "WAIT_INVENTORY_FEED",
+      "operator": "custom_operators.mainframe.MainframeDatasetSensor",
+      "task_type": "sensor_file",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "VALIDATE_INVENTORY",
+      "name": "VALIDATE_INVENTORY",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "UPDATE_STOCK_LEVELS",
+      "name": "UPDATE_STOCK_LEVELS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "FLAG_EXPIRING_DRUGS",
+      "name": "FLAG_EXPIRING_DRUGS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "INVENTORY_COMPLETE",
+      "name": "INVENTORY_COMPLETE",
+      "operator": "airflow.providers.standard.operators.empty.EmptyOperator",
+      "task_type": "empty",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "drug_inventory"
+}

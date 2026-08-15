@@ -1,0 +1,28 @@
+regulatory_reporting:
+  description: REGULATORY_REPORTING application
+  schedule: 0 6 * * 1-5
+  catchup: false
+  default_args:
+    owner: maestro
+    start_date: '2024-01-01'
+  tasks:
+    extract_compliance_data:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: EXTRACT_COMPLIANCE_DATA
+      pool: nw_0001
+    build_fda_report:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: BUILD_FDA_REPORT
+      dependencies:
+      - extract_compliance_data
+    build_ema_report:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: BUILD_EMA_REPORT
+      dependencies:
+      - extract_compliance_data
+    submit_regulatory:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: SUBMIT_REGULATORY
+      dependencies:
+      - build_ema_report
+      - build_fda_report

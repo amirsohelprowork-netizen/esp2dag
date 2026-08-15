@@ -1,0 +1,158 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "ME_ACCRUE_EXPENSES",
+      "kind": "success",
+      "resolved": true,
+      "to": "ME_TRIAL_BALANCE"
+    },
+    {
+      "condition": null,
+      "from": "ME_ACCRUE_INTEREST",
+      "kind": "success",
+      "resolved": true,
+      "to": "ME_TRIAL_BALANCE"
+    },
+    {
+      "condition": null,
+      "from": "ME_CONSOLIDATION",
+      "kind": "success",
+      "resolved": true,
+      "to": "ME_POST_TO_SAP"
+    },
+    {
+      "condition": null,
+      "from": "ME_FREEZE_ACCOUNTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "ME_ACCRUE_EXPENSES"
+    },
+    {
+      "condition": null,
+      "from": "ME_FREEZE_ACCOUNTS",
+      "kind": "success",
+      "resolved": true,
+      "to": "ME_ACCRUE_INTEREST"
+    },
+    {
+      "condition": null,
+      "from": "ME_INTERCOMPANY_ELIM",
+      "kind": "success",
+      "resolved": true,
+      "to": "ME_CONSOLIDATION"
+    },
+    {
+      "condition": null,
+      "from": "ME_POST_TO_SAP",
+      "kind": "success",
+      "resolved": true,
+      "to": "ME_CLOSE_COMPLETE"
+    },
+    {
+      "condition": null,
+      "from": "ME_TRIAL_BALANCE",
+      "kind": "success",
+      "resolved": true,
+      "to": "ME_INTERCOMPANY_ELIM"
+    },
+    {
+      "condition": null,
+      "from": "WAIT_ALL_DAILY_CORE",
+      "kind": "success",
+      "resolved": true,
+      "to": "ME_FREEZE_ACCOUNTS"
+    },
+    {
+      "condition": null,
+      "from": "WAIT_ALL_DAILY_SAP",
+      "kind": "success",
+      "resolved": true,
+      "to": "ME_FREEZE_ACCOUNTS"
+    }
+  ],
+  "name": "MONTH_END_CLOSE",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "WAIT_ALL_DAILY_CORE",
+      "name": "WAIT_ALL_DAILY_CORE",
+      "operator": "airflow.providers.standard.sensors.external_task.ExternalTaskSensor",
+      "task_type": "sensor_external",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "WAIT_ALL_DAILY_SAP",
+      "name": "WAIT_ALL_DAILY_SAP",
+      "operator": "airflow.providers.standard.sensors.external_task.ExternalTaskSensor",
+      "task_type": "sensor_external",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "ME_FREEZE_ACCOUNTS",
+      "name": "ME_FREEZE_ACCOUNTS",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "ME_ACCRUE_INTEREST",
+      "name": "ME_ACCRUE_INTEREST",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "ME_ACCRUE_EXPENSES",
+      "name": "ME_ACCRUE_EXPENSES",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "ME_TRIAL_BALANCE",
+      "name": "ME_TRIAL_BALANCE",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "ME_INTERCOMPANY_ELIM",
+      "name": "ME_INTERCOMPANY_ELIM",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "ME_CONSOLIDATION",
+      "name": "ME_CONSOLIDATION",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "SAP_JOB",
+      "id": "ME_POST_TO_SAP",
+      "name": "ME_POST_TO_SAP",
+      "operator": "airflow.providers.sap.operators.sap_rfc.SapRfcOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "ME_CLOSE_COMPLETE",
+      "name": "ME_CLOSE_COMPLETE",
+      "operator": "airflow.providers.standard.operators.empty.EmptyOperator",
+      "task_type": "empty",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "month_end_close"
+}

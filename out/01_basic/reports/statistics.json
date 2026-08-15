@@ -1,0 +1,21 @@
+{
+  "errors": 0,
+  "failed_conversions": 0,
+  "mapped_schedules": 3,
+  "operator_mix": {
+    "custom_operators.mainframe.MainframeSubmitJobOperator": 16
+  },
+  "schedule_samples": {
+    "0 22 * * *": 1,
+    "0 23 * * 1-5": 1,
+    "0 5 * * *": 1
+  },
+  "successful_conversions": 3,
+  "total_applications": 3,
+  "total_dependencies": 15,
+  "total_events": 3,
+  "total_jobs": 16,
+  "unmapped_or_partial_schedules": 0,
+  "unsupported_features": 0,
+  "warnings": 6
+}

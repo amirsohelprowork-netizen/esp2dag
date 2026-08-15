@@ -1,0 +1,81 @@
+{
+  "by_code": {
+    "W300": 4,
+    "W400": 4
+  },
+  "by_severity": {
+    "WARNING": 8
+  },
+  "by_stage": {
+    "parser": 4,
+    "semantic": 4
+  },
+  "diagnostic_samples": [
+    {
+      "application": "CLAIMS_WINDOWS",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "CLAIMS_WINDOWS",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "DATA_WAREHOUSE_ETL",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "DATA_WAREHOUSE_ETL",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "LEGACY_POLICY_AS400",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "LEGACY_POLICY_AS400",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    },
+    {
+      "application": "RISK_ENGINE_AIX",
+      "code": "W300",
+      "job": null,
+      "message": "Unsupported statement 'JCLLIB' parked.",
+      "severity": "WARNING",
+      "stage": "parser"
+    },
+    {
+      "application": "RISK_ENGINE_AIX",
+      "code": "W400",
+      "job": null,
+      "message": "Unsupported application statement 'JCLLIB' requires manual review: Unrecognized or unsupported application-level statement",
+      "severity": "WARNING",
+      "stage": "semantic"
+    }
+  ],
+  "failed_units": [],
+  "has_errors": false
+}

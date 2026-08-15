@@ -1,0 +1,55 @@
+regulatory_capital:
+  description: REGULATORY_CAPITAL application
+  catchup: false
+  default_args:
+    owner: riskengine
+    start_date: '2024-01-01'
+  tasks:
+    rc_extract_positions:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: RC_EXTRACT_POSITIONS
+    rc_extract_risk_weights:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: RC_EXTRACT_RISK_WEIGHTS
+      dependencies:
+      - rc_extract_positions
+    rc_calc_rwa:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: AIX_RISK_PROD_01
+      command: /opt/risk/bin/rwa_calculator --framework basel4 --approach advanced
+      dependencies:
+      - rc_extract_risk_weights
+    rc_calc_capital_ratio:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: RC_CALC_CAPITAL_RATIO
+      ccchk: (0)
+      dependencies:
+      - rc_calc_rwa
+    rc_build_submission:
+      operator: airflow.providers.ssh.operators.ssh.SSHOperator
+      ssh_conn_id: LNX_REGULATORY_01
+      command: /opt/regulatory/scripts/build_corep_xml.py
+      dependencies:
+      - rc_calc_capital_ratio
+    rc_sap_post_capital:
+      operator: airflow.providers.sap.operators.sap_rfc.SapRfcOperator
+      conn_id: SAP_PROD_01
+      abap_name: ZREGCAP01
+      variant: QUARTERLY_CAPITAL
+      sap_job_name: REG_CAPITAL_POST
+      sap_job_class: A
+      step_user: BATCHREG
+      dependencies:
+      - rc_build_submission
+    rc_generate_board_report:
+      operator: airflow.providers.microsoft.winrm.operators.winrm.WinRMOperator
+      ssh_conn_id: WIN_RPT_01
+      command: E:\Regulatory\scripts\generate_board_capital_report.bat
+      dependencies:
+      - rc_build_submission
+    rc_submit_to_regulator:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: RC_SUBMIT_TO_REGULATOR
+      dependencies:
+      - rc_generate_board_report
+      - rc_sap_post_capital

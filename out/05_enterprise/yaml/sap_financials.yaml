@@ -1,0 +1,66 @@
+sap_financials:
+  description: SAP_FINANCIALS application
+  schedule: 0 23 * * 1-5
+  catchup: false
+  default_args:
+    owner: maestro
+    start_date: '2024-01-01'
+  tasks:
+    wait_core_for_sap:
+      operator: airflow.providers.standard.sensors.external_task.ExternalTaskSensor
+      external_dag_id: core_banking_eod
+      external_task_id: wait_core_for_sap
+      mode: reschedule
+    wait_lending_for_sap:
+      operator: airflow.providers.standard.sensors.external_task.ExternalTaskSensor
+      external_dag_id: lending_batch
+      external_task_id: wait_lending_for_sap
+      mode: reschedule
+    sap_post_gl:
+      operator: airflow.providers.sap.operators.sap_rfc.SapRfcOperator
+      conn_id: SAP_PROD_01
+      abap_name: RGGBS000
+      variant: PROD_GL_DAILY
+      sap_job_name: FI_GL_POST
+      sap_job_class: A
+      step_user: BATCHFI
+      pool: nw_0005
+      dependencies:
+      - wait_core_for_sap
+      - wait_lending_for_sap
+    sap_post_ar:
+      operator: airflow.providers.sap.operators.sap_rfc.SapRfcOperator
+      conn_id: SAP_PROD_01
+      abap_name: RFEPOS00
+      variant: PROD_AR_DAILY
+      sap_job_name: FI_AR_POST
+      sap_job_class: A
+      step_user: BATCHFI
+      dependencies:
+      - sap_post_gl
+    sap_post_ap:
+      operator: airflow.providers.sap.operators.sap_rfc.SapRfcOperator
+      conn_id: SAP_PROD_01
+      abap_name: RFFOUS_T
+      variant: PROD_AP_DAILY
+      sap_job_name: FI_AP_POST
+      sap_job_class: A
+      step_user: BATCHFI
+      dependencies:
+      - sap_post_gl
+    sap_reconcile:
+      operator: airflow.providers.sap.operators.sap_rfc.SapRfcOperator
+      conn_id: SAP_PROD_01
+      abap_name: SAPF190
+      variant: PROD_RECONCILE
+      sap_job_name: FI_RECONCILE
+      sap_job_class: B
+      step_user: BATCHFI
+      pool: nw_0005
+      dependencies:
+      - sap_post_ap
+      - sap_post_ar
+    sap_fi_complete:
+      operator: airflow.providers.standard.operators.empty.EmptyOperator
+      dependencies:
+      - sap_reconcile

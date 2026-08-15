@@ -1,0 +1,94 @@
+{
+  "applications": [
+    {
+      "colliding_id": false,
+      "custom_operators": [],
+      "dependency_count": 5,
+      "name": "CLINICAL_TRIALS_ETL",
+      "operator_mix": {
+        "airflow.providers.ssh.operators.ssh.SSHOperator": 4,
+        "airflow.providers.standard.sensors.external_task.ExternalTaskSensor": 1
+      },
+      "schedule": "0 1 * * *",
+      "schedule_status": "mapped",
+      "task_count": 5,
+      "unsupported_features": [],
+      "workflow_id": "clinical_trials_etl"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeDatasetSensor",
+        "custom_operators.mainframe.MainframeSubmitJobOperator"
+      ],
+      "dependency_count": 5,
+      "name": "DRUG_INVENTORY",
+      "operator_mix": {
+        "airflow.providers.standard.operators.empty.EmptyOperator": 1,
+        "custom_operators.mainframe.MainframeDatasetSensor": 1,
+        "custom_operators.mainframe.MainframeSubmitJobOperator": 3
+      },
+      "schedule": "0 0 * * *",
+      "schedule_status": "mapped",
+      "task_count": 5,
+      "unsupported_features": [],
+      "workflow_id": "drug_inventory"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeSubmitJobOperator"
+      ],
+      "dependency_count": 4,
+      "name": "ORDER_FULFILLMENT",
+      "operator_mix": {
+        "custom_operators.mainframe.MainframeSubmitJobOperator": 4
+      },
+      "schedule": "0 7 * * *",
+      "schedule_status": "mapped",
+      "task_count": 4,
+      "unsupported_features": [],
+      "workflow_id": "order_fulfillment"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeSubmitJobOperator"
+      ],
+      "dependency_count": 4,
+      "name": "REGULATORY_REPORTING",
+      "operator_mix": {
+        "custom_operators.mainframe.MainframeSubmitJobOperator": 4
+      },
+      "schedule": "0 6 * * 1-5",
+      "schedule_status": "mapped",
+      "task_count": 4,
+      "unsupported_features": [],
+      "workflow_id": "regulatory_reporting"
+    },
+    {
+      "colliding_id": false,
+      "custom_operators": [
+        "custom_operators.mainframe.MainframeSubmitJobOperator"
+      ],
+      "dependency_count": 8,
+      "name": "SUPPLY_CHAIN",
+      "operator_mix": {
+        "airflow.providers.standard.operators.empty.EmptyOperator": 3,
+        "airflow.providers.standard.sensors.external_task.ExternalTaskSensor": 1,
+        "custom_operators.mainframe.MainframeSubmitJobOperator": 4
+      },
+      "schedule": "0 3 * * *",
+      "schedule_status": "mapped",
+      "task_count": 8,
+      "unsupported_features": [],
+      "workflow_id": "supply_chain"
+    }
+  ],
+  "colliding_dag_ids": [],
+  "custom_operators_required": {
+    "custom_operators.mainframe.MainframeDatasetSensor": 1,
+    "custom_operators.mainframe.MainframeSubmitJobOperator": 15
+  },
+  "manual_review_count": 4
+}

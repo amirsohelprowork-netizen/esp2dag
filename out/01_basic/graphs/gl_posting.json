@@ -1,0 +1,105 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "GL_CONSOLIDATE",
+      "kind": "success",
+      "resolved": true,
+      "to": "GL_BALANCE_CHECK"
+    },
+    {
+      "condition": null,
+      "from": "GL_INITIALIZE",
+      "kind": "success",
+      "resolved": true,
+      "to": "GL_POST_AP"
+    },
+    {
+      "condition": null,
+      "from": "GL_INITIALIZE",
+      "kind": "success",
+      "resolved": true,
+      "to": "GL_POST_AR"
+    },
+    {
+      "condition": null,
+      "from": "GL_INITIALIZE",
+      "kind": "success",
+      "resolved": true,
+      "to": "GL_POST_PAYROLL"
+    },
+    {
+      "condition": null,
+      "from": "GL_POST_AP",
+      "kind": "success",
+      "resolved": true,
+      "to": "GL_CONSOLIDATE"
+    },
+    {
+      "condition": null,
+      "from": "GL_POST_AR",
+      "kind": "success",
+      "resolved": true,
+      "to": "GL_CONSOLIDATE"
+    },
+    {
+      "condition": null,
+      "from": "GL_POST_PAYROLL",
+      "kind": "success",
+      "resolved": true,
+      "to": "GL_CONSOLIDATE"
+    }
+  ],
+  "name": "GL_POSTING",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "GL_INITIALIZE",
+      "name": "GL_INITIALIZE",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "GL_POST_AR",
+      "name": "GL_POST_AR",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "GL_POST_AP",
+      "name": "GL_POST_AP",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "GL_POST_PAYROLL",
+      "name": "GL_POST_PAYROLL",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "GL_CONSOLIDATE",
+      "name": "GL_CONSOLIDATE",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "GL_BALANCE_CHECK",
+      "name": "GL_BALANCE_CHECK",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "gl_posting"
+}

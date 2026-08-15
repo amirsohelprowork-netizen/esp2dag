@@ -1,0 +1,68 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "CALC_CREDIT_RISK",
+      "kind": "success",
+      "resolved": true,
+      "to": "AGGREGATE_RISK"
+    },
+    {
+      "condition": null,
+      "from": "CALC_VAR",
+      "kind": "success",
+      "resolved": true,
+      "to": "AGGREGATE_RISK"
+    },
+    {
+      "condition": null,
+      "from": "LOAD_MARKET_DATA",
+      "kind": "success",
+      "resolved": true,
+      "to": "CALC_CREDIT_RISK"
+    },
+    {
+      "condition": null,
+      "from": "LOAD_MARKET_DATA",
+      "kind": "success",
+      "resolved": true,
+      "to": "CALC_VAR"
+    }
+  ],
+  "name": "RISK_ENGINE_AIX",
+  "nodes": [
+    {
+      "esp_job_type": "AIX_JOB",
+      "id": "LOAD_MARKET_DATA",
+      "name": "LOAD_MARKET_DATA",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "AIX_JOB",
+      "id": "CALC_VAR",
+      "name": "CALC_VAR",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "AIX_JOB",
+      "id": "CALC_CREDIT_RISK",
+      "name": "CALC_CREDIT_RISK",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "AIX_JOB",
+      "id": "AGGREGATE_RISK",
+      "name": "AGGREGATE_RISK",
+      "operator": "airflow.providers.ssh.operators.ssh.SSHOperator",
+      "task_type": "bash",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "risk_engine_aix"
+}

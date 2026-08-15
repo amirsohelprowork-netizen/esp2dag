@@ -1,0 +1,68 @@
+{
+  "edges": [
+    {
+      "condition": null,
+      "from": "BUILD_EMA_REPORT",
+      "kind": "success",
+      "resolved": true,
+      "to": "SUBMIT_REGULATORY"
+    },
+    {
+      "condition": null,
+      "from": "BUILD_FDA_REPORT",
+      "kind": "success",
+      "resolved": true,
+      "to": "SUBMIT_REGULATORY"
+    },
+    {
+      "condition": null,
+      "from": "EXTRACT_COMPLIANCE_DATA",
+      "kind": "success",
+      "resolved": true,
+      "to": "BUILD_EMA_REPORT"
+    },
+    {
+      "condition": null,
+      "from": "EXTRACT_COMPLIANCE_DATA",
+      "kind": "success",
+      "resolved": true,
+      "to": "BUILD_FDA_REPORT"
+    }
+  ],
+  "name": "REGULATORY_REPORTING",
+  "nodes": [
+    {
+      "esp_job_type": "JOB",
+      "id": "EXTRACT_COMPLIANCE_DATA",
+      "name": "EXTRACT_COMPLIANCE_DATA",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "BUILD_FDA_REPORT",
+      "name": "BUILD_FDA_REPORT",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "BUILD_EMA_REPORT",
+      "name": "BUILD_EMA_REPORT",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    },
+    {
+      "esp_job_type": "JOB",
+      "id": "SUBMIT_REGULATORY",
+      "name": "SUBMIT_REGULATORY",
+      "operator": "custom_operators.mainframe.MainframeSubmitJobOperator",
+      "task_type": "bash",
+      "unresolved": false
+    }
+  ],
+  "workflow_id": "regulatory_reporting"
+}

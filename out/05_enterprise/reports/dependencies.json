@@ -1,0 +1,162 @@
+{
+  "by_external_dag": {
+    "core_banking_eod": [
+      {
+        "consumer_dag": "lending_batch",
+        "consumer_task": "WAIT_CORE_BANKING",
+        "external_dag_id": "core_banking_eod",
+        "external_task_id": "WAIT_CORE_BANKING"
+      },
+      {
+        "consumer_dag": "trading_settlement",
+        "consumer_task": "WAIT_CORE_FOR_SETTLE",
+        "external_dag_id": "core_banking_eod",
+        "external_task_id": "WAIT_CORE_FOR_SETTLE"
+      },
+      {
+        "consumer_dag": "credit_risk_batch",
+        "consumer_task": "WAIT_CORE_FOR_CREDIT",
+        "external_dag_id": "core_banking_eod",
+        "external_task_id": "WAIT_CORE_FOR_CREDIT"
+      },
+      {
+        "consumer_dag": "sap_financials",
+        "consumer_task": "WAIT_CORE_FOR_SAP",
+        "external_dag_id": "core_banking_eod",
+        "external_task_id": "WAIT_CORE_FOR_SAP"
+      },
+      {
+        "consumer_dag": "data_lake_ingestion",
+        "consumer_task": "WAIT_CORE_FOR_LAKE",
+        "external_dag_id": "core_banking_eod",
+        "external_task_id": "WAIT_CORE_FOR_LAKE"
+      },
+      {
+        "consumer_dag": "month_end_close",
+        "consumer_task": "WAIT_ALL_DAILY_CORE",
+        "external_dag_id": "core_banking_eod",
+        "external_task_id": "WAIT_ALL_DAILY_CORE"
+      }
+    ],
+    "lending_batch": [
+      {
+        "consumer_dag": "sap_financials",
+        "consumer_task": "WAIT_LENDING_FOR_SAP",
+        "external_dag_id": "lending_batch",
+        "external_task_id": "WAIT_LENDING_FOR_SAP"
+      }
+    ],
+    "market_risk_var": [
+      {
+        "consumer_dag": "windows_reporting",
+        "consumer_task": "WAIT_RISK_FOR_REPORTS",
+        "external_dag_id": "market_risk_var",
+        "external_task_id": "WAIT_RISK_FOR_REPORTS"
+      }
+    ],
+    "sap_financials": [
+      {
+        "consumer_dag": "windows_reporting",
+        "consumer_task": "WAIT_SAP_FOR_REPORTS",
+        "external_dag_id": "sap_financials",
+        "external_task_id": "WAIT_SAP_FOR_REPORTS"
+      },
+      {
+        "consumer_dag": "month_end_close",
+        "consumer_task": "WAIT_ALL_DAILY_SAP",
+        "external_dag_id": "sap_financials",
+        "external_task_id": "WAIT_ALL_DAILY_SAP"
+      }
+    ],
+    "trading_settlement": [
+      {
+        "consumer_dag": "market_risk_var",
+        "consumer_task": "WAIT_SETTLEMENT",
+        "external_dag_id": "trading_settlement",
+        "external_task_id": "WAIT_SETTLEMENT"
+      },
+      {
+        "consumer_dag": "data_lake_ingestion",
+        "consumer_task": "WAIT_TRADING_FOR_LAKE",
+        "external_dag_id": "trading_settlement",
+        "external_task_id": "WAIT_TRADING_FOR_LAKE"
+      }
+    ]
+  },
+  "edge_count": 12,
+  "external_edges": [
+    {
+      "consumer_dag": "credit_risk_batch",
+      "consumer_task": "WAIT_CORE_FOR_CREDIT",
+      "external_dag_id": "core_banking_eod",
+      "external_task_id": "WAIT_CORE_FOR_CREDIT"
+    },
+    {
+      "consumer_dag": "data_lake_ingestion",
+      "consumer_task": "WAIT_CORE_FOR_LAKE",
+      "external_dag_id": "core_banking_eod",
+      "external_task_id": "WAIT_CORE_FOR_LAKE"
+    },
+    {
+      "consumer_dag": "data_lake_ingestion",
+      "consumer_task": "WAIT_TRADING_FOR_LAKE",
+      "external_dag_id": "trading_settlement",
+      "external_task_id": "WAIT_TRADING_FOR_LAKE"
+    },
+    {
+      "consumer_dag": "lending_batch",
+      "consumer_task": "WAIT_CORE_BANKING",
+      "external_dag_id": "core_banking_eod",
+      "external_task_id": "WAIT_CORE_BANKING"
+    },
+    {
+      "consumer_dag": "market_risk_var",
+      "consumer_task": "WAIT_SETTLEMENT",
+      "external_dag_id": "trading_settlement",
+      "external_task_id": "WAIT_SETTLEMENT"
+    },
+    {
+      "consumer_dag": "month_end_close",
+      "consumer_task": "WAIT_ALL_DAILY_CORE",
+      "external_dag_id": "core_banking_eod",
+      "external_task_id": "WAIT_ALL_DAILY_CORE"
+    },
+    {
+      "consumer_dag": "month_end_close",
+      "consumer_task": "WAIT_ALL_DAILY_SAP",
+      "external_dag_id": "sap_financials",
+      "external_task_id": "WAIT_ALL_DAILY_SAP"
+    },
+    {
+      "consumer_dag": "sap_financials",
+      "consumer_task": "WAIT_CORE_FOR_SAP",
+      "external_dag_id": "core_banking_eod",
+      "external_task_id": "WAIT_CORE_FOR_SAP"
+    },
+    {
+      "consumer_dag": "sap_financials",
+      "consumer_task": "WAIT_LENDING_FOR_SAP",
+      "external_dag_id": "lending_batch",
+      "external_task_id": "WAIT_LENDING_FOR_SAP"
+    },
+    {
+      "consumer_dag": "trading_settlement",
+      "consumer_task": "WAIT_CORE_FOR_SETTLE",
+      "external_dag_id": "core_banking_eod",
+      "external_task_id": "WAIT_CORE_FOR_SETTLE"
+    },
+    {
+      "consumer_dag": "windows_reporting",
+      "consumer_task": "WAIT_RISK_FOR_REPORTS",
+      "external_dag_id": "market_risk_var",
+      "external_task_id": "WAIT_RISK_FOR_REPORTS"
+    },
+    {
+      "consumer_dag": "windows_reporting",
+      "consumer_task": "WAIT_SAP_FOR_REPORTS",
+      "external_dag_id": "sap_financials",
+      "external_task_id": "WAIT_SAP_FOR_REPORTS"
+    }
+  ],
+  "missing_external_dags": []
+}

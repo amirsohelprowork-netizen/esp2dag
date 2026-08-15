@@ -1,0 +1,30 @@
+maintenance_cyclic:
+  description: MAINTENANCE_CYCLIC application
+  schedule: 0 6 * * *
+  catchup: false
+  default_args:
+    owner: maestro
+    start_date: '2024-01-01'
+  tasks:
+    check_fleet_status:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: CHECK_FLEET_STATUS
+    schedule_inspections:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: SCHEDULE_INSPECTIONS
+      dependencies:
+      - check_fleet_status
+    assign_mechanics:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: ASSIGN_MECHANICS
+      dependencies:
+      - schedule_inspections
+    track_completion:
+      operator: custom_operators.mainframe.MainframeSubmitJobOperator
+      job_name: TRACK_COMPLETION
+      dependencies:
+      - assign_mechanics
+    maint_cycle_done:
+      operator: airflow.providers.standard.operators.empty.EmptyOperator
+      dependencies:
+      - track_completion
